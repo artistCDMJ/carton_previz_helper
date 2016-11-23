@@ -1,3 +1,35 @@
+# -*- coding: utf8 -*-
+# python
+# ##### BEGIN GPL LICENSE BLOCK #####
+#
+#  This program is free software; you can redistribute it and/or
+#  modify it under the terms of the GNU General Public License
+#  as published by the Free Software Foundation; either version 2
+#  of the License, or (at your option) any later version.
+#
+#  This program is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+#
+#  You should have received a copy of the GNU General Public License
+#  along with this program; if not, write to the Free Software
+#  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
+#  MA 02110-1301, USA.
+#
+# ##### END GPL LICENSE BLOCK #####
+
+# <pep8 compliant>
+
+bl_info = {"name": "Carton Helper Panel",
+           "author": "CDMJ",
+           "version": (1, 00, 0),
+           "blender": (2, 78, 0),
+           "location": "Toolbar > Misc Tab > Carton Panel",
+           "description": "Carton Previs Studio Tool",
+           "warning": "Run only in Cycles",
+           "category": "Object"}
+
 import bpy
 
 class ReprojectMask(bpy.types.Operator):
@@ -229,15 +261,45 @@ class MetricMeasurement(bpy.types.Operator):
         
         bpy.context.scene.unit_settings.system = 'METRIC'
 
-        return {'FINISHED'}    
+        return {'FINISHED'} 
+
+class CartonBase(bpy.types.Operator):
+    """Add Carton Base"""
+    bl_idname = "object.carton_base" 
+                                     
+     
+    bl_label = "Carton Base"
+    bl_options = { 'REGISTER', 'UNDO' }
+    
+    def execute(self, context):
+
+        scene = context.scene
+
+
+        #new code
+        
+        bpy.ops.mesh.primitive_cube_add(radius=1, view_align=False, enter_editmode=False, location=(0, 0, 0), layers=(True, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False))
+        bpy.ops.object.editmode_toggle()
+        bpy.ops.transform.translate(value=(0, 0, 1.00741), constraint_axis=(False, False, True), constraint_orientation='GLOBAL', mirror=False, proportional='DISABLED', proportional_edit_falloff='SMOOTH', proportional_size=1, release_confirm=True)
+        bpy.ops.object.editmode_toggle()
+        bpy.context.object.dimensions[0] = 2
+        bpy.context.object.dimensions[1] = 2
+        bpy.context.object.dimensions[2] = 2
+        bpy.ops.object.transform_apply(location=False, rotation=True, scale=True)
+
+
+
+
+        return {'FINISHED'}   
     
     
-class TestPanel(bpy.types.Panel):
+class CartonPanel(bpy.types.Panel):
     """A custom panel in the viewport toolbar"""
-    bl_label = "Test Panel"
+    bl_label = "Carton Helper"
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'TOOLS'
-    bl_category = "Tests"
+    bl_category = "Carton Helper"
+    
     
     def draw(self, context):
         layout = self.layout
@@ -258,6 +320,13 @@ class TestPanel(bpy.types.Panel):
         row2.scale_x=0.50
         row2.scale_y=2.0
         row2.operator("object.metric_measure", text = "Metric", icon = 'MOD_BUILD')
+        
+        #col.separator()
+        # Big render button
+        #layout.label(text=":")
+        row = layout.row()
+        row.scale_y = 3.0
+        row.operator("object.carton_base", text = "Carton Base", icon = 'VIEW3D')
         
         box = layout.box()                        #big buttons aligned
         col = box.column(align = True)
@@ -314,6 +383,9 @@ class TestPanel(bpy.types.Panel):
         row.scale_y = 3.0
         row.operator("render.render")
         
+        
+        
+        
 #bpy.context.scene.unit_settings.system = 'IMPERIAL'
 #bpy.context.scene.unit_settings.system = 'METRIC'
 
@@ -322,6 +394,7 @@ class TestPanel(bpy.types.Panel):
 
 def register():
     bpy.utils.register_class(ImperialMeasurement)
+    bpy.utils.register_class(CartonBase)
     bpy.utils.register_class(FrontMapping)
     bpy.utils.register_class(BackMapping)
     bpy.utils.register_class(TopMapping)
@@ -329,10 +402,11 @@ def register():
     bpy.utils.register_class(LeftMapping)
     bpy.utils.register_class(RightMapping)
     bpy.utils.register_class(MetricMeasurement)
-    bpy.utils.register_class(TestPanel)
+    bpy.utils.register_class(CartonPanel)
     
 def unregister():
     bpy.utils.unregister_class(ImperialMeasurement)
+    bpy.utils.unregister_class(CartonBase)
     bpy.utils.unregister_class(FrontMapping)
     bpy.utils.unregister_class(BackMapping)
     bpy.utils.unregister_class(TopMapping)
@@ -340,10 +414,9 @@ def unregister():
     bpy.utils.unregister_class(LeftMapping)
     bpy.utils.unregister_class(RightMapping)
     bpy.utils.unregister_class(MetricMeasurement)
-    bpy.utils.unregister_class(TestPanel)
+    bpy.utils.unregister_class(CartonPanel)
     
     
        
 if __name__ == "__main__":
     register()
-
