@@ -290,7 +290,33 @@ class CartonBase(bpy.types.Operator):
 
 
 
-        return {'FINISHED'}   
+        return {'FINISHED'}  
+
+class AddBevel(bpy.types.Operator):
+    """Add Mod"""
+    bl_idname = "object.add_bevel" 
+                                     
+     
+    bl_label = "Add Bevel"
+    bl_options = { 'REGISTER', 'UNDO' }
+    
+    def execute(self, context):
+
+        scene = context.scene
+
+
+        #new code
+        
+        bpy.ops.object.modifier_add(type='BEVEL')        
+        bpy.context.object.modifiers["Bevel"].segments = 3
+        bpy.context.object.modifiers["Bevel"].width = 0.021
+        bpy.context.object.modifiers["Bevel"].show_in_editmode = False
+
+
+
+
+
+        return {'FINISHED'} 
     
     
 class CartonPanel(bpy.types.Panel):
@@ -327,6 +353,7 @@ class CartonPanel(bpy.types.Panel):
         row = layout.row()
         row.scale_y = 3.0
         row.operator("object.carton_base", text = "Carton Base", icon = 'VIEW3D')
+        row.operator("object.add_bevel", text = "Add Bevel", icon = 'MESH_ICOSPHERE')
         
         box = layout.box()                        #big buttons aligned
         col = box.column(align = True)
@@ -395,6 +422,7 @@ class CartonPanel(bpy.types.Panel):
 def register():
     bpy.utils.register_class(ImperialMeasurement)
     bpy.utils.register_class(CartonBase)
+    bpy.utils.register_class(AddBevel)
     bpy.utils.register_class(FrontMapping)
     bpy.utils.register_class(BackMapping)
     bpy.utils.register_class(TopMapping)
@@ -407,6 +435,7 @@ def register():
 def unregister():
     bpy.utils.unregister_class(ImperialMeasurement)
     bpy.utils.unregister_class(CartonBase)
+    bpy.utils.unregister_class(AddBevel)
     bpy.utils.unregister_class(FrontMapping)
     bpy.utils.unregister_class(BackMapping)
     bpy.utils.unregister_class(TopMapping)
