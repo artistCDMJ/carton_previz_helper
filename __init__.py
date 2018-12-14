@@ -45,8 +45,6 @@ class OBJECT_OT_front_mapping(bpy.types.Operator):
     def execute(self, context):
 
         scene = context.scene
-
-
         #new code
         bpy.ops.view3d.view_persportho() 
         bpy.ops.view3d.view_axis(type='FRONT')
@@ -66,10 +64,7 @@ class OBJECT_OT_back_mapping(bpy.types.Operator):
     def execute(self, context):
 
         scene = context.scene
-
-
         #new code
-
         bpy.ops.view3d.view_persportho() 
         bpy.ops.view3d.view_axis(type='BACK')
         bpy.ops.view3d.view_selected()
@@ -88,8 +83,6 @@ class OBJECT_OT_top_mapping(bpy.types.Operator):
     def execute(self, context):
 
         scene = context.scene
-
-
         #new code
 
         bpy.ops.view3d.view_persportho() 
