@@ -210,9 +210,9 @@ class OBJECT_OT_carton_base(bpy.types.Operator):
         scene = context.scene
 
         #create carton primitive
-        bpy.ops.mesh.primitive_cube_add(view_align=False, enter_editmode=False, location=(0, 0, 0))
+        bpy.ops.mesh.primitive_cube_add(enter_editmode=False, location=(0, 0, 0))
         bpy.ops.object.editmode_toggle()
-        bpy.ops.transform.translate(value=(0, 0, 1.00741), constraint_axis=(False, False, True), constraint_orientation='GLOBAL', mirror=False, proportional='DISABLED', proportional_edit_falloff='SMOOTH', proportional_size=1, release_confirm=True)
+        bpy.ops.transform.translate(value=(0, 0, 1.00741), constraint_axis=(False, False, True), mirror=False, proportional_edit_falloff='SMOOTH', proportional_size=1, release_confirm=True)
         bpy.ops.object.editmode_toggle()
         bpy.context.object.dimensions[0] = 2
         bpy.context.object.dimensions[1] = 2
