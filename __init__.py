@@ -220,7 +220,7 @@ class OBJECT_OT_carton_base(bpy.types.Operator):
         bpy.ops.object.transform_apply(location=False, rotation=True, scale=True)
         cursor = scene.cursor.location
         obj = context.active_object
-        obj_new.location = cursor
+        obj.location = cursor
 
         return {'FINISHED'}
 
