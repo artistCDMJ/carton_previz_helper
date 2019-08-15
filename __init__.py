@@ -198,7 +198,7 @@ class VIEW3D_OT_metric_measurement(bpy.types.Operator):
         return {'FINISHED'}
 
 class OBJECT_OT_carton_base(bpy.types.Operator):
-    """Add Carton Base"""
+    """Add Carton Base at Cursor Position - adjust Dimensions in Item Panel"""
     bl_idname = "object.carton_base"
 
 
