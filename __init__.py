@@ -31,6 +31,10 @@ bl_info = {"name": "Carton Helper Panel",
            "category": "Object"}
 
 import bpy
+from bpy.types import Operator
+from bpy.props import FloatVectorProperty
+from bpy_extras.object_utils import AddObjectHelper, object_data_add
+from mathutils import Vector
 
 
 
@@ -197,30 +201,63 @@ class VIEW3D_OT_metric_measurement(bpy.types.Operator):
 
         return {'FINISHED'}
 
-class OBJECT_OT_carton_base(bpy.types.Operator):
+###################***************************experimental feature for carton :D robbed from templates
+def add_object(self, context):
+    scale_x = self.scale.x
+    scale_y = self.scale.y
+    scale_z = self.scale.z
+
+    verts = [
+        (+1.0, +1.0, -1.0),
+        (+1.0, -1.0, -1.0),
+        (-1.0, -1.0, -1.0),
+        (-1.0, +1.0, -1.0),
+        (+1.0, +1.0, +1.0),
+        (+1.0, -1.0, +1.0),
+        (-1.0, -1.0, +1.0),
+        (-1.0, +1.0, +1.0),
+    ]
+    edges = []
+    faces = [
+        (0, 1, 2, 3),
+        (4, 7, 6, 5),
+        (0, 4, 5, 1),
+        (1, 5, 6, 2),
+        (2, 6, 7, 3),
+        (4, 0, 3, 7),
+    ]
+
+    # apply size
+    for i, v in enumerate(verts):
+        verts[i] = v[0] * scale_x, v[1] * scale_y, v[2] * scale_z
+
+    #return verts, faces
+
+    mesh = bpy.data.meshes.new(name="New Carton Base")
+    mesh.from_pydata(verts, edges, faces)
+    # useful for development when the mesh may be invalid.
+    # mesh.validate(verbose=True)
+    object_data_add(context, mesh, operator=self)
+
+
+
+class OBJECT_OT_carton_base(bpy.types.Operator, AddObjectHelper):
     """Add Carton Base at Cursor Position - adjust Dimensions in Item Panel"""
     bl_idname = "object.carton_base"
-
-
     bl_label = "Carton Base"
     bl_options = { 'REGISTER', 'UNDO' }
 
+
+    scale: FloatVectorProperty(
+        name="scale",
+        default=(1.0, 1.0, 1.0),
+        subtype='TRANSLATION',
+        description="scaling",
+    )
+
     def execute(self, context):
 
-        scene = context.scene
-
-        #create carton primitive
-        bpy.ops.mesh.primitive_cube_add(enter_editmode=False, location=(0, 0, 0))
-        bpy.ops.object.editmode_toggle()
-        bpy.ops.transform.translate(value=(0, 0, 1.00741), constraint_axis=(False, False, True), mirror=False, proportional_edit_falloff='SMOOTH', proportional_size=1, release_confirm=True)
-        bpy.ops.object.editmode_toggle()
-        bpy.context.object.dimensions[0] = 2
-        bpy.context.object.dimensions[1] = 2
-        bpy.context.object.dimensions[2] = 2
-        bpy.ops.object.transform_apply(location=False, rotation=True, scale=True)
-        cursor = scene.cursor.location
-        obj = context.active_object
-        obj.location = cursor
+        add_object(self, context)
 
         return {'FINISHED'}
 
