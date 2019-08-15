@@ -218,6 +218,8 @@ class OBJECT_OT_carton_base(bpy.types.Operator):
         bpy.context.object.dimensions[1] = 2
         bpy.context.object.dimensions[2] = 2
         bpy.ops.object.transform_apply(location=False, rotation=True, scale=True)
+        obj = context.active_object
+        obj_new.location = cursor
 
         return {'FINISHED'}
 
