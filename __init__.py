@@ -23,7 +23,7 @@
 
 bl_info = {"name": "Carton Helper Panel",
            "author": "CDMJ",
-           "version": (3, 00, 0),
+           "version": (2, 00, 0),
            "blender": (2, 80, 0),
            "location": "Toolbar > Misc Tab > Carton Panel",
            "description": "Carton Previs Studio Tool",
@@ -45,6 +45,10 @@ class OBJECT_OT_front_mapping(bpy.types.Operator):
 
     bl_label = "Unwrap Project Front"
     bl_options = { 'REGISTER', 'UNDO' }
+    
+    @classmethod
+    def poll(cls, context):
+        return context.active_object is not None
 
     def execute(self, context):
 
@@ -64,6 +68,10 @@ class OBJECT_OT_back_mapping(bpy.types.Operator):
 
     bl_label = "Unwrap Project Back"
     bl_options = { 'REGISTER', 'UNDO' }
+    
+    @classmethod
+    def poll(cls, context):
+        return context.active_object is not None
 
     def execute(self, context):
 
@@ -83,6 +91,10 @@ class OBJECT_OT_top_mapping(bpy.types.Operator):
 
     bl_label = "Unwrap Project Top"
     bl_options = { 'REGISTER', 'UNDO' }
+    
+    @classmethod
+    def poll(cls, context):
+        return context.active_object is not None
 
     def execute(self, context):
 
@@ -103,6 +115,10 @@ class OBJECT_OT_bottom_mapping(bpy.types.Operator):
 
     bl_label = "Unwrap Project Bottom"
     bl_options = { 'REGISTER', 'UNDO' }
+    
+    @classmethod
+    def poll(cls, context):
+        return context.active_object is not None
 
     def execute(self, context):
 
@@ -125,6 +141,10 @@ class OBJECT_OT_left_mapping(bpy.types.Operator):
 
     bl_label = "Unwrap Project Left"
     bl_options = { 'REGISTER', 'UNDO' }
+    
+    @classmethod
+    def poll(cls, context):
+        return context.active_object is not None
 
     def execute(self, context):
 
@@ -147,6 +167,10 @@ class OBJECT_OT_right_mapping(bpy.types.Operator):
 
     bl_label = "Unwrap Project Right"
     bl_options = { 'REGISTER', 'UNDO' }
+    
+    @classmethod
+    def poll(cls, context):
+        return context.active_object is not None
 
     def execute(self, context):
 
@@ -289,6 +313,10 @@ class OBJECT_OT_add_bevel(bpy.types.Operator):
 
     bl_label = "Add Bevel"
     bl_options = { 'REGISTER', 'UNDO' }
+    
+    @classmethod
+    def poll(cls, context):
+        return context.active_object is not None
 
     def execute(self, context):
 
@@ -325,7 +353,10 @@ class OBJECT_OT_apply_xmirror(bpy.types.Operator):
     bl_idname = "object.apply_xmirror"
     bl_label = "Xmirror ApplyMods"
     bl_options = { 'REGISTER', 'UNDO' }
-
+    
+    @classmethod
+    def poll(cls, context):
+        return context.active_object is not None
 
     def execute(self, context):
 
