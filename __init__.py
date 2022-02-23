@@ -23,7 +23,7 @@
 
 bl_info = {"name": "Carton Helper Panel",
            "author": "CDMJ",
-           "version": (2, 00, 0),
+           "version": (3, 10, 0),
            "blender": (2, 80, 0),
            "location": "Toolbar > Misc Tab > Carton Panel",
            "description": "Carton Previs Studio Tool",
@@ -366,17 +366,57 @@ class OBJECT_OT_apply_xmirror(bpy.types.Operator):
         bpy.context.object.data.use_mirror_topology = True
 
 
-
-
         return {'FINISHED'}
+    
+class OBJECT_OT_select_project(bpy.types.Operator):
+    """Select All and Project from View"""
+    bl_idname = "object.select_project"
+    bl_label = "Project From View"
+    bl_options = { 'REGISTER', 'UNDO' }
+    
+    @classmethod
+    def poll(cls, context):
+        return context.active_object is not None
+
+    def execute(self, context):
+        
+        #bpy.ops.mesh.select_all(action='TOGGLE')
+        #bpy.ops.mesh.select_all()
+
+        bpy.ops.uv.project_from_view(camera_bounds=True, correct_aspect=False, scale_to_bounds=False)
+
+
+
+        return {'FINISHED'} 
+    
+class OBJECT_OT_center_object(bpy.types.Operator):
+    """center object and cursor to world"""
+    bl_idname = "object.center_object"
+    bl_label = "Center Object to World"
+    bl_options = { 'REGISTER', 'UNDO' }
+    
+    @classmethod
+    def poll(cls, context):
+        return context.active_object is not None
+
+    def execute(self, context):
+        #cursor to world origin
+        bpy.ops.view3d.snap_cursor_to_center()
+        #selected object origin to geometry
+        bpy.ops.object.origin_set(type='ORIGIN_GEOMETRY', center='MEDIAN')
+        bpy.ops.view3d.snap_selected_to_cursor(use_offset = False)
+
+        return {'FINISHED'}   
+    
+    
 
 class PANEL_PT_carton_panel(bpy.types.Panel):
     """A custom panel in the viewport toolbar"""
     bl_idname = "ch.settings"
     bl_space_type = 'VIEW_3D'
-    bl_label = "Settings"
+    bl_label = "Carton Viz Helper"
     bl_region_type = "UI"
-    bl_category = "Carton Helper"
+    bl_category = "Carton Viz Helper"
 
     #OBJECT_OT_cartonflat_base,
     #OBJECT_OT_wire_draw
@@ -421,7 +461,7 @@ class PANEL_PT_carton_panel(bpy.types.Panel):
 
         box = layout.box()                        #big buttons aligned
         col = box.column(align = True)
-        col.label(text='Carton Sides')
+        col.label(text='Carton UV Mapping')
 
         row = col.row(align=True)
         #row.scale_y = 2.0
@@ -465,13 +505,27 @@ class PANEL_PT_carton_panel(bpy.types.Panel):
         row2.scale_x=0.50
         row2.scale_y=1.5
         row2.operator("object.unwrap_right", text = "Right", icon = 'NEXT_KEYFRAME')
+        row = layout.row()
+        row.scale_y = 1.5
+        row.operator("object.select_project", text = "View Project", icon='ZOOM_PREVIOUS')
 
         #col.separator()
         # Big render button
         #layout.label(text=":")
-        row = layout.row()
-        row.scale_y = 1.5
-        row.operator("render.render")
+       # row = layout.row()
+       # row.scale_y = 1.5
+        #row.operator("render.render")
+        row = col.row(align=True)
+        #row.scale_y = 2.0
+        row3=row.split(align=True)
+        row3.scale_x=0.50
+        row3.scale_y=1.5
+        row3.operator("object.center_object", text = "Center Object Origin", icon = 'ANCHOR_CENTER')
+
+        row4 = row.split(align=True)
+        row4.scale_x=0.50
+        row4.scale_y=1.5
+        row4.operator("render.render")
 
 
 classes = (
@@ -488,7 +542,9 @@ classes = (
     PANEL_PT_carton_panel,
     OBJECT_OT_cartonflat_base,
     OBJECT_OT_wire_draw,
-    OBJECT_OT_apply_xmirror
+    OBJECT_OT_apply_xmirror,
+    OBJECT_OT_select_project,
+    OBJECT_OT_center_object
 )
 
 
