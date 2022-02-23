@@ -23,7 +23,7 @@
 
 bl_info = {"name": "Carton Helper Panel",
            "author": "CDMJ",
-           "version": (2, 00, 0),
+           "version": (3, 00, 0),
            "blender": (2, 80, 0),
            "location": "Toolbar > Misc Tab > Carton Panel",
            "description": "Carton Previs Studio Tool",
@@ -260,6 +260,27 @@ class OBJECT_OT_carton_base(bpy.types.Operator, AddObjectHelper):
         add_object(self, context)
 
         return {'FINISHED'}
+    
+class OBJECT_OT_cartonflat_base(bpy.types.Operator):
+    """Add Plane for Construct of Carton Flat"""
+    bl_idname = "object.cartonflat_base"
+    bl_label = "Carton Flat Base"
+    bl_options = { 'REGISTER', 'UNDO' }
+
+
+    scale: FloatVectorProperty(
+        name="scale",
+        default=(1.0, 1.0, 1.0),
+        subtype='TRANSLATION',
+        description="scaling",
+    )
+
+    def execute(self, context):
+
+        bpy.ops.mesh.primitive_plane_add(enter_editmode=False, align='WORLD', location=(0, 0, 0), scale=(1, 1, 1))
+
+
+        return {'FINISHED'}
 
 class OBJECT_OT_add_bevel(bpy.types.Operator):
     """Add Mod"""
@@ -280,6 +301,43 @@ class OBJECT_OT_add_bevel(bpy.types.Operator):
         bpy.context.object.modifiers["Bevel"].show_in_editmode = True
 
         return {'FINISHED'}
+    
+class OBJECT_OT_wire_draw(bpy.types.Operator):
+    """Tooltip"""
+    bl_idname = "object.wire_draw"
+    bl_label = "Object to Wire"
+
+    @classmethod
+    def poll(cls, context):
+        return context.active_object is not None
+
+    def execute(self, context):
+        if bpy.context.object.display_type == 'TEXTURED':
+            bpy.context.object.display_type = 'WIRE'
+        elif bpy.context.object.display_type == 'WIRE':
+            bpy.context.object.display_type = 'TEXTURED'
+        else:
+            bpy.context.object.display_type = 'WIRE'
+        return {'FINISHED'}
+    
+class OBJECT_OT_apply_xmirror(bpy.types.Operator):
+    """Enable XMirror and Apply Mods"""
+    bl_idname = "object.apply_xmirror"
+    bl_label = "Xmirror ApplyMods"
+    bl_options = { 'REGISTER', 'UNDO' }
+
+
+    def execute(self, context):
+
+        bpy.ops.object.convert(target='MESH')
+        #bpy.ops.object.editmode_toggle()
+        bpy.context.object.data.use_mirror_x = True
+        bpy.context.object.data.use_mirror_topology = True
+
+
+
+
+        return {'FINISHED'}
 
 class PANEL_PT_carton_panel(bpy.types.Panel):
     """A custom panel in the viewport toolbar"""
@@ -289,7 +347,9 @@ class PANEL_PT_carton_panel(bpy.types.Panel):
     bl_region_type = "UI"
     bl_category = "Carton Helper"
 
-
+    #OBJECT_OT_cartonflat_base,
+    #OBJECT_OT_wire_draw
+    
     def draw(self, context):
         layout = self.layout
 
@@ -301,22 +361,32 @@ class PANEL_PT_carton_panel(bpy.types.Panel):
         #row.scale_y = 2.0
         row1=row.split(align=True)
         row1.scale_x=0.50
-        row1.scale_y=2.0
+        row1.scale_y=1.5
         row1.operator("object.imperial_measure", text = "Imperial", icon = 'MOD_DECIM')
 
         row2 = row.split(align=True)
 
         row2.scale_x=0.50
-        row2.scale_y=2.0
+        row2.scale_y=1.5
         row2.operator("object.metric_measure", text = "Metric", icon = 'MOD_BUILD')
 
-        col.separator()
+        #col.separator()
         # Big render button
         #layout.label(text=":")
+        box = layout.box()                             #MACRO
+        col = box.column(align = True)
+        col.label(text="Carton Primitives and Features")
         row = layout.row()
-        row.scale_y = 3.0
+        row.scale_y = 1.5
         row.operator("object.carton_base", text = "Carton Base", icon = 'VIEW3D')
+        row.operator("object.wire_draw", text = "Wire Toggle", icon = 'MOD_SOLIDIFY')
+        row = layout.row()
+        row.scale_y = 1.5
+        row.operator("object.cartonflat_base", text = "Carton Flat", icon = 'MOD_MESHDEFORM')
         row.operator("object.add_bevel", text = "Add Bevel", icon = 'MESH_ICOSPHERE')
+        #object.apply_xmirror
+        row.operator("object.apply_xmirror", text = "XMirror", icon = 'MOD_MIRROR')
+        
 
         box = layout.box()                        #big buttons aligned
         col = box.column(align = True)
@@ -326,12 +396,12 @@ class PANEL_PT_carton_panel(bpy.types.Panel):
         #row.scale_y = 2.0
         row1=row.split(align=True)
         row1.scale_x=0.50
-        row1.scale_y=2.0
+        row1.scale_y=1.5
         row1.operator("object.unwrap_front", text = "Front")
         row2 = row.split(align=True)
 
         row2.scale_x=0.50
-        row2.scale_y=2.0
+        row2.scale_y=1.5
         row2.operator("object.unwrap_back", text = "Back")
 
         #col.separator()
@@ -343,12 +413,12 @@ class PANEL_PT_carton_panel(bpy.types.Panel):
         #row = col.row(align=True)
         row1=row.split(align=True)
         row1.scale_x=0.50
-        row1.scale_y=2.0
+        row1.scale_y=1.5
         row1.operator("object.unwrap_top", text = "Top")
 
         row2 = row.split(align=True)
         row2.scale_x=0.50
-        row2.scale_y=2.0
+        row2.scale_y=1.5
         row2.operator("object.unwrap_bottom", text = "Bottom")
 
         #col.separator()
@@ -357,19 +427,19 @@ class PANEL_PT_carton_panel(bpy.types.Panel):
         #row.scale_y = 2.0
         row1=row.split(align=True)
         row1.scale_x=0.50
-        row1.scale_y=2.0
+        row1.scale_y=1.5
         row1.operator("object.unwrap_left", text = "Left", icon = 'PREV_KEYFRAME')
 
         row2 = row.split(align=True)
         row2.scale_x=0.50
-        row2.scale_y=2.0
+        row2.scale_y=1.5
         row2.operator("object.unwrap_right", text = "Right", icon = 'NEXT_KEYFRAME')
 
         #col.separator()
         # Big render button
         #layout.label(text=":")
         row = layout.row()
-        row.scale_y = 3.0
+        row.scale_y = 1.5
         row.operator("render.render")
 
 
@@ -384,7 +454,10 @@ classes = (
     VIEW3D_OT_metric_measurement,
     OBJECT_OT_carton_base,
     OBJECT_OT_add_bevel,
-    PANEL_PT_carton_panel
+    PANEL_PT_carton_panel,
+    OBJECT_OT_cartonflat_base,
+    OBJECT_OT_wire_draw,
+    OBJECT_OT_apply_xmirror
 )
 
 
