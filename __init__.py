@@ -398,14 +398,6 @@ class OBJECT_OT_apply_xmirror(bpy.types.Operator):
         bpy.context.object.data.use_mirror_topology = True
         #change to Edge and Face Select to prepare for Folding Stage
         bpy.context.tool_settings.mesh_select_mode = (False, True, True)
-        
-        #create empty vertex groups for assignment
-        bpy.context.active_object.vertex_groups.new(name='_lip_')
-        bpy.context.active_object.vertex_groups.new(name='_back_')
-        bpy.context.active_object.vertex_groups.new(name='_top_')
-        bpy.context.active_object.vertex_groups.new(name='_front_')
-        bpy.context.active_object.vertex_groups.new(name='_bottom_')
-        
 
 
         return {'FINISHED'}
@@ -449,6 +441,34 @@ class OBJECT_OT_center_object(bpy.types.Operator):
         bpy.ops.view3d.snap_selected_to_cursor(use_offset = False)
 
         return {'FINISHED'}   
+
+## bpy.context.scene.tool_settings.transform_pivot_point = 'CURSOR'
+class SCENE_OT_scene_pivot(bpy.types.Operator):
+    """Tooltip"""
+    bl_idname = "scene.pivot"
+    bl_label = "Set Pivot Toggle"
+
+    
+    
+    def execute(self, context):
+        
+        scene = context.scene
+        
+        #scene.tool_settings.transform_pivot_point : pivot
+        if bpy.context.scene.tool_settings.transform_pivot_point == 'MEDIAN_POINT':
+            bpy.context.scene.tool_settings.transform_pivot_point = 'CURSOR'
+        elif bpy.context.scene.tool_settings.transform_pivot_point == 'CURSOR':
+            bpy.context.scene.tool_settings.transform_pivot_point = 'MEDIAN_POINT'
+        else:
+            bpy.context.scene.tool_settings.transform_pivot_point = 'CURSOR'
+            
+        #toggle editmode - NIX THAT, too many button presses
+        #bpy.ops.object.editmode_toggle()
+        #set selection mode
+        #bpy.context.tool_settings.mesh_select_mode = (True, True, False)
+        return {'FINISHED'}
+
+
     
 ############# haxx Solution for Camera Scale - adopt operators from paint camera and canvas import
 
@@ -534,7 +554,7 @@ class OBJECT_OT_Cameraview_model(bpy.types.Operator):
 
 
         #switch on composition guides for use in cameraview paint
-        #bpy.context.space_data.context = 'DATA'
+        
         bpy.context.object.data.show_composition_center = True
 
 
@@ -577,7 +597,6 @@ class OBJECT_OT_Cameraview_model(bpy.types.Operator):
 
         #deselect camera
         bpy.ops.object.select_all(action='TOGGLE')
-       # bpy.ops.object.select_all(action='TOGGLE')
 
         #select plane
         bpy.ops.object.select_all(action='DESELECT')
@@ -594,16 +613,16 @@ class PANEL_PT_carton_panel(bpy.types.Panel):
     """A custom panel in the viewport toolbar"""
     bl_idname = "ch.settings"
     bl_space_type = 'VIEW_3D'
-    bl_label = "Carton Viz Helper"
+    bl_label = "Carton Units"
     bl_region_type = "UI"
     bl_category = "Carton Viz Helper"
+    bl_options = {'DEFAULT_CLOSED'}
+    
 
-    #OBJECT_OT_cartonflat_base,
-    #OBJECT_OT_wire_draw
     
     def draw(self, context):
         layout = self.layout
-
+        
         box = layout.box()                             #MACRO
         col = box.column(align = True)
         col.label(text="Carton Units")
@@ -611,13 +630,24 @@ class PANEL_PT_carton_panel(bpy.types.Panel):
         #row.scale_y = 2.0
         row1=row.split(align=True)
         row1.scale_x=0.50
-        row1.scale_y=1.5
+        row1.scale_y=1.25
         row1.operator("object.imperial_measure", text = "Imperial", icon = 'MOD_DECIM')
         row2 = row.split(align=True)
         row2.scale_x=0.50
-        row2.scale_y=1.5
+        row2.scale_y=1.25
         row2.operator("object.metric_measure", text = "Metric", icon = 'MOD_BUILD')
         
+class PANEL_PT_CartonPrimitives(bpy.types.Panel):
+    """Carton Modeling Tools"""
+    bl_label = "Carton Modeling Tools"
+    bl_idname = "PANEL_PT_CartonPrimitives"
+    bl_space_type = "VIEW_3D"
+    bl_region_type = "UI"
+    bl_category = "Carton Viz Helper"
+    bl_options = {'DEFAULT_CLOSED'}
+    
+    def draw(self, context):
+        layout = self.layout
                 
         box = layout.box()                             
         col = box.column(align = True)
@@ -626,19 +656,17 @@ class PANEL_PT_carton_panel(bpy.types.Panel):
         #row.scale_y = 2.0
         row1=row.split(align=True)
         row1.scale_x=0.50
-        row1.scale_y=1.5
+        row1.scale_y=1.25
         row1.operator("object.carton_base", text = "Carton 3D Base", icon = 'VIEW3D')
         row2 = row.split(align=True)
         row2.scale_x=0.50
-        row2.scale_y=1.5
+        row2.scale_y=1.25
         row2.operator("object.cartonflat_base", text = "Flat Carton", icon = 'MOD_MESHDEFORM')
-        #row = layout.row()
-        #row.scale_y = 1.5
-        #row.operator("object.carton_base", text = "Carton 3D Base", icon = 'VIEW3D')
+
         row = layout.row()
         row = col.row(align=True)
         row.scale_x=0.50
-        row.scale_y = 1.5
+        row.scale_y = 1.25
         row1 = row.split(align=True)
         row1.operator("object.add_bevel", text = "Bevel", icon = 'MESH_ICOSPHERE')
         
@@ -647,88 +675,99 @@ class PANEL_PT_carton_panel(bpy.types.Panel):
         row = layout.row()
         row = col.row(align=True)
         row.scale_x=0.50
-        row.scale_y = 1.5
+        row.scale_y = 1.25
         row2 = row.split(align=True)
         row2.operator("import_image.to_plane", text="Load Dieline", icon = 'MESH_GRID')
         row2.operator("image.cameraview_model", text = "DieCam", icon ="OUTLINER_OB_CAMERA")
-        #row.operator("object.cartonflat_base", text = "Flat Carton", icon = 'MOD_MESHDEFORM')
+
         
         row = layout.row()
         row = col.row(align=True)
         row.scale_x=0.50
-        row.scale_y = 1.5
+        row.scale_y = 1.25
         row3 = row.split(align=True)
         row3.operator("object.center_mirror", text = "Add Mirror", icon = 'ORIENTATION_VIEW')
         row3.operator("object.apply_xmirror", text = "XMirror", icon = 'MOD_MIRROR')
-        
 
+        row = layout.row()
+        row = col.row(align=True)
+        row.scale_x=0.50
+        row.scale_y = 1.25
+        row = row.split(align=True)
+        row.operator("scene.pivot", text="Toggle Pivot", icon = 'PIVOT_CURSOR')
+        
+class PANEL_PT_CartonUVMapping(bpy.types.Panel):
+    """Carton Mapping Tools"""
+    bl_label = "Carton UV Mapping Tools"
+    bl_idname = "PANEL_PT_CartonMapping"
+    bl_space_type = "VIEW_3D"
+    bl_region_type = "UI"
+    bl_category = "Carton Viz Helper"
+    bl_options = {'DEFAULT_CLOSED'}
+    
+    def draw(self, context):
+        layout = self.layout
+    
         box = layout.box()                        #big buttons aligned
         col = box.column(align = True)
         col.label(text='Carton UV Mapping')
 
         row = col.row(align=True)
-        #row.scale_y = 2.0
+        
         row1=row.split(align=True)
         row1.scale_x=0.50
-        row1.scale_y=1.5
+        row1.scale_y=1.25
         row1.operator("object.unwrap_front", text = "Front")
         row2 = row.split(align=True)
 
         row2.scale_x=0.50
-        row2.scale_y=1.5
+        row2.scale_y=1.25
         row2.operator("object.unwrap_back", text = "Back")
 
-        #col.separator()
 
-        #box = layout.box()                        #big buttons aligned
         col = box.column(align = True)
         
 
-        #row = col.row(align=True)
+       
         row1=row.split(align=True)
         row1.scale_x=0.50
-        row1.scale_y=1.5
+        row1.scale_y=1.25
         row1.operator("object.unwrap_top", text = "Top")
 
         row2 = row.split(align=True)
         row2.scale_x=0.50
-        row2.scale_y=1.5
+        row2.scale_y=1.25
         row2.operator("object.unwrap_bottom", text = "Bottom")
 
-        #col.separator()
+       
 
         row = col.row(align=True)
-        #row.scale_y = 2.0
+       
         row1=row.split(align=True)
         row1.scale_x=0.50
-        row1.scale_y=1.5
+        row1.scale_y=1.25
         row1.operator("object.unwrap_left", text = "Left", icon = 'PREV_KEYFRAME')
 
         row2 = row.split(align=True)
         row2.scale_x=0.50
-        row2.scale_y=1.5
+        row2.scale_y=1.25
         row2.operator("object.unwrap_right", text = "Right", icon = 'NEXT_KEYFRAME')
         row3 = row.split(align=True)
         row3.scale_x=0.50
-        row3.scale_y = 1.5
+        row3.scale_y = 1.25
         row3.operator("object.select_project", text = "Flat Project", icon='ZOOM_PREVIOUS')
 
-        #col.separator()
-        # Big render button
-        #layout.label(text=":")
-       # row = layout.row()
-       # row.scale_y = 1.5
-        #row.operator("render.render")
+        
         row = col.row(align=True)
-        #row.scale_y = 2.0
+       
         row3=row.split(align=True)
         row3.scale_x=0.50
-        row3.scale_y=1.5
+        row3.scale_y=1.25
         row3.operator("object.center_object", text = "Center Object Origin", icon = 'ANCHOR_CENTER')
 
         row4 = row.split(align=True)
         row4.scale_x=0.50
-        row4.scale_y=1.5
+        row4.scale_y=1.25
         row4.operator("render.render")
 
 
@@ -744,13 +783,16 @@ classes = (
     OBJECT_OT_carton_base,
     OBJECT_OT_add_bevel,
     PANEL_PT_carton_panel,
+    PANEL_PT_CartonPrimitives,
+    PANEL_PT_CartonUVMapping,
     OBJECT_OT_cartonflat_base,
     OBJECT_OT_wire_draw,
     OBJECT_OT_apply_xmirror,
     OBJECT_OT_select_project,
     OBJECT_OT_center_object,
     OBJECT_OT_Cameraview_model,
-    OBJECT_OT_center_mirror
+    OBJECT_OT_center_mirror,
+    SCENE_OT_scene_pivot
 )
 
 
