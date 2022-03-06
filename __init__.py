@@ -398,6 +398,14 @@ class OBJECT_OT_apply_xmirror(bpy.types.Operator):
         bpy.context.object.data.use_mirror_topology = True
         #change to Edge and Face Select to prepare for Folding Stage
         bpy.context.tool_settings.mesh_select_mode = (False, True, True)
+        
+        #create empty vertex groups for assignment
+        bpy.context.active_object.vertex_groups.new(name='_lip_')
+        bpy.context.active_object.vertex_groups.new(name='_back_')
+        bpy.context.active_object.vertex_groups.new(name='_top_')
+        bpy.context.active_object.vertex_groups.new(name='_front_')
+        bpy.context.active_object.vertex_groups.new(name='_bottom_')
+        
 
 
         return {'FINISHED'}
