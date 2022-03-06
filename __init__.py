@@ -39,7 +39,7 @@ from mathutils import Vector
 
 
 class OBJECT_OT_front_mapping(bpy.types.Operator):
-    """Unwrap Front"""
+    """Project selected face to UV Map in UV Editor using Shift to Front View and Project"""
     bl_idname = "object.unwrap_front"
 
 
@@ -62,7 +62,7 @@ class OBJECT_OT_front_mapping(bpy.types.Operator):
         return {'FINISHED'}
 
 class OBJECT_OT_back_mapping(bpy.types.Operator):
-    """Unwrap Back"""
+    """Project selected face to UV Map in UV Editor using Shift to Back View and Project"""
     bl_idname = "object.unwrap_back"
 
 
@@ -85,7 +85,7 @@ class OBJECT_OT_back_mapping(bpy.types.Operator):
         return {'FINISHED'}
 
 class OBJECT_OT_top_mapping(bpy.types.Operator):
-    """Unwrap Top"""
+    """Project selected face to UV Map in UV Editor using Shift to Top View and Project"""
     bl_idname = "object.unwrap_top"
 
 
@@ -109,7 +109,7 @@ class OBJECT_OT_top_mapping(bpy.types.Operator):
         return {'FINISHED'}
 
 class OBJECT_OT_bottom_mapping(bpy.types.Operator):
-    """Unwrap Bottom"""
+    """Project selected face to UV Map in UV Editor using Shift to Bottom View and Project"""
     bl_idname = "object.unwrap_bottom"
 
 
@@ -135,7 +135,7 @@ class OBJECT_OT_bottom_mapping(bpy.types.Operator):
         return {'FINISHED'}
 
 class OBJECT_OT_left_mapping(bpy.types.Operator):
-    """Unwrap Left"""
+    """Project selected face to UV Map in UV Editor using Shift to Left View and Project"""
     bl_idname = "object.unwrap_left"
 
 
@@ -161,7 +161,7 @@ class OBJECT_OT_left_mapping(bpy.types.Operator):
         return {'FINISHED'}
 
 class OBJECT_OT_right_mapping(bpy.types.Operator):
-    """Unwrap Right"""
+    """Project selected face to UV Map in UV Editor using Shift to Right View and Project"""
     bl_idname = "object.unwrap_right"
 
 
@@ -188,7 +188,7 @@ class OBJECT_OT_right_mapping(bpy.types.Operator):
 
 
 class VIEW3D_OT_imperial_measurement(bpy.types.Operator):
-    """Imperial"""
+    """Sets World Units to Imperial to input Inches and Feet"""
     bl_idname = "object.imperial_measure"
 
 
@@ -207,7 +207,7 @@ class VIEW3D_OT_imperial_measurement(bpy.types.Operator):
         return {'FINISHED'}
 
 class VIEW3D_OT_metric_measurement(bpy.types.Operator):
-    """Metric"""
+    """Sets World Units to Metric to input Centimeters and Millimeters"""
     bl_idname = "object.metric_measure"
 
 
@@ -266,9 +266,9 @@ def add_object(self, context):
 
 
 class OBJECT_OT_carton_base(bpy.types.Operator, AddObjectHelper):
-    """Add Carton Base at Cursor Position - adjust Dimensions in Item Panel"""
+    """Add Carton 3D Base at Cursor Position - adjust Dimensions in Item Panel"""
     bl_idname = "object.carton_base"
-    bl_label = "Carton Base"
+    bl_label = "Carton 3D Base"
     bl_options = { 'REGISTER', 'UNDO' }
 
 
@@ -309,7 +309,7 @@ class OBJECT_OT_cartonflat_base(bpy.types.Operator):
         return {'FINISHED'}
 
 class OBJECT_OT_add_bevel(bpy.types.Operator):
-    """Add Mod"""
+    """Applies Scale and Adds Bevel Modifier to 3D Carton Base"""
     bl_idname = "object.add_bevel"
 
 
@@ -333,7 +333,7 @@ class OBJECT_OT_add_bevel(bpy.types.Operator):
         return {'FINISHED'}
     
 class OBJECT_OT_wire_draw(bpy.types.Operator):
-    """Tooltip"""
+    """Toggles Wire Draw and Tex Draw and sets Selection Mode to Edge and Vertex"""
     bl_idname = "object.wire_draw"
     bl_label = "Object to Wire"
 
@@ -358,15 +358,11 @@ class OBJECT_OT_wire_draw(bpy.types.Operator):
         return {'FINISHED'}
 
 class OBJECT_OT_center_mirror(bpy.types.Operator):
-    """Center to selection and add mirror"""
+    """Center Origin to Selection and add Mirror Modifier for construct of Carton Flat"""
     bl_idname = "object.center_mirror"
     bl_label = "Center and Add Mirror"
 
-    @classmethod
-    def poll(cls, context):
-        return context.active_object is not None
     
-    #bpy.ops.object.editmode_toggle()
     @classmethod
     def poll(cls, context):
         return context.active_object is not None
@@ -381,7 +377,7 @@ class OBJECT_OT_center_mirror(bpy.types.Operator):
         return {'FINISHED'}
     
 class OBJECT_OT_apply_xmirror(bpy.types.Operator):
-    """Enable XMirror and Apply Mods"""
+    """Apply Mirror Modifier and Set X Mirror and Empty Vertex Groups"""
     bl_idname = "object.apply_xmirror"
     bl_label = "Xmirror ApplyMods"
     bl_options = { 'REGISTER', 'UNDO' }
@@ -398,12 +394,20 @@ class OBJECT_OT_apply_xmirror(bpy.types.Operator):
         bpy.context.object.data.use_mirror_topology = True
         #change to Edge and Face Select to prepare for Folding Stage
         bpy.context.tool_settings.mesh_select_mode = (False, True, True)
+        
+        #create empty vertex groups for assignment
+        bpy.context.active_object.vertex_groups.new(name='_lip_')
+        bpy.context.active_object.vertex_groups.new(name='_back_')
+        bpy.context.active_object.vertex_groups.new(name='_top_')
+        bpy.context.active_object.vertex_groups.new(name='_front_')
+        bpy.context.active_object.vertex_groups.new(name='_bottom_')
+        
 
 
         return {'FINISHED'}
     
 class OBJECT_OT_select_project(bpy.types.Operator):
-    """Select All and Project from View"""
+    """Project through Die Camera to Align Texture to Reference"""
     bl_idname = "object.select_project"
     bl_label = "Project From View"
     bl_options = { 'REGISTER', 'UNDO' }
@@ -424,7 +428,7 @@ class OBJECT_OT_select_project(bpy.types.Operator):
         return {'FINISHED'} 
     
 class OBJECT_OT_center_object(bpy.types.Operator):
-    """center object and cursor to world"""
+    """Snaps cursor and Selected Object to World Center"""
     bl_idname = "object.center_object"
     bl_label = "Center Object to World"
     bl_options = { 'REGISTER', 'UNDO' }
@@ -444,7 +448,7 @@ class OBJECT_OT_center_object(bpy.types.Operator):
 
 ## bpy.context.scene.tool_settings.transform_pivot_point = 'CURSOR'
 class SCENE_OT_scene_pivot(bpy.types.Operator):
-    """Tooltip"""
+    """Toggle Pivot between Cursor and Median Point in 3D View"""
     bl_idname = "scene.pivot"
     bl_label = "Set Pivot Toggle"
 
@@ -467,6 +471,31 @@ class SCENE_OT_scene_pivot(bpy.types.Operator):
         #set selection mode
         #bpy.context.tool_settings.mesh_select_mode = (True, True, False)
         return {'FINISHED'}
+    
+    
+class OBJECT_OT_cardboard(bpy.types.Operator):
+    """Set A Cardboard Solidify Ready for Material Index 1"""
+    bl_idname = "object.cardboard"
+    bl_label = "Set Cardboard Thickness and Material"
+
+    
+    @classmethod
+    def poll(cls, context):
+        return context.active_object is not None
+    
+    def execute(self, context):
+        
+        scene = context.scene
+        
+        bpy.ops.object.modifier_add(type='SOLIDIFY')
+        bpy.context.object.modifiers["Solidify"].thickness = 0.002
+        bpy.context.object.modifiers["Solidify"].use_even_offset = True
+        bpy.context.object.modifiers["Solidify"].material_offset = 1
+        bpy.context.object.modifiers["Solidify"].material_offset_rim = 1
+        
+        return {'FINISHED'}
+
+
 
 
     
@@ -611,7 +640,7 @@ class OBJECT_OT_Cameraview_model(bpy.types.Operator):
 
 class PANEL_PT_carton_panel(bpy.types.Panel):
     """A custom panel in the viewport toolbar"""
-    bl_idname = "ch.settings"
+    bl_idname = "Carton_panel"
     bl_space_type = 'VIEW_3D'
     bl_label = "Carton Units"
     bl_region_type = "UI"
@@ -625,7 +654,7 @@ class PANEL_PT_carton_panel(bpy.types.Panel):
         
         box = layout.box()                             #MACRO
         col = box.column(align = True)
-        col.label(text="Carton Units")
+        col.label(text="Change to Appropriate Units for Scene")
         row = col.row(align=True)
         #row.scale_y = 2.0
         row1=row.split(align=True)
@@ -651,9 +680,9 @@ class PANEL_PT_CartonPrimitives(bpy.types.Panel):
                 
         box = layout.box()                             
         col = box.column(align = True)
-        col.label(text="Carton Primitives and Operations")
+        col.label(text="Carton Building Starts Here")
         row = col.row(align=True)
-        #row.scale_y = 2.0
+        
         row1=row.split(align=True)
         row1.scale_x=0.50
         row1.scale_y=1.25
@@ -693,8 +722,9 @@ class PANEL_PT_CartonPrimitives(bpy.types.Panel):
         row = col.row(align=True)
         row.scale_x=0.50
         row.scale_y = 1.25
-        row = row.split(align=True)
+        row = row.split(align=False)
         row.operator("scene.pivot", text="Toggle Pivot", icon = 'PIVOT_CURSOR')
+        
         
 class PANEL_PT_CartonUVMapping(bpy.types.Panel):
     """Carton Mapping Tools"""
@@ -710,7 +740,7 @@ class PANEL_PT_CartonUVMapping(bpy.types.Panel):
     
         box = layout.box()                        #big buttons aligned
         col = box.column(align = True)
-        col.label(text='Carton UV Mapping')
+        col.label(text='Project Each Face to a View for Mapping')
 
         row = col.row(align=True)
         
@@ -758,18 +788,43 @@ class PANEL_PT_CartonUVMapping(bpy.types.Panel):
         row3.operator("object.select_project", text = "Flat Project", icon='ZOOM_PREVIOUS')
 
         
+       
+        
+class PANEL_PT_CartonFinishing(bpy.types.Panel):
+    """Carton Finishing Tools"""
+    bl_label = "Carton Finishing Tools"
+    bl_idname = "PANEL_PT_CartonFinishing"
+    bl_space_type = "VIEW_3D"
+    bl_region_type = "UI"
+    bl_category = "Carton Viz Helper"
+    bl_options = {'DEFAULT_CLOSED'}
+    
+    def draw(self, context):
+        layout = self.layout
+    
+        box = layout.box()                        #big buttons aligned
+        col = box.column(align = True)
+        col.label(text='Presets for Prep of Final Products')
+
+        row = col.row(align=True)
+        
+        row1=row.split(align=True)
+        row1.scale_x=0.50
+        row1.scale_y=1.25
+        row1.operator("object.center_object", text = "Center Object Origin", icon = 'ANCHOR_CENTER')
+        row2 = row.split(align=True)
+
+        row2.scale_x=0.50
+        row2.scale_y=1.25
+        #row2.operator("render.render")
+        row2.operator("object.cardboard", text = "Cardboard Set", icon = 'MOD_LINEART')
+        
         row = col.row(align=True)
        
-        row3=row.split(align=True)
-        row3.scale_x=0.50
-        row3.scale_y=1.25
-        row3.operator("object.center_object", text = "Center Object Origin", icon = 'ANCHOR_CENTER')
-
-        row4 = row.split(align=True)
-        row4.scale_x=0.50
-        row4.scale_y=1.25
-        row4.operator("render.render")
-
+        row1=row.split(align=True)
+        row1.scale_x=0.50
+        row1.scale_y=1.25
+        row1.operator("render.render", text = "Render", icon = 'OUTLINER_OB_IMAGE')
 
 classes = (
     OBJECT_OT_front_mapping,
@@ -785,6 +840,7 @@ classes = (
     PANEL_PT_carton_panel,
     PANEL_PT_CartonPrimitives,
     PANEL_PT_CartonUVMapping,
+    PANEL_PT_CartonFinishing,
     OBJECT_OT_cartonflat_base,
     OBJECT_OT_wire_draw,
     OBJECT_OT_apply_xmirror,
@@ -792,7 +848,8 @@ classes = (
     OBJECT_OT_center_object,
     OBJECT_OT_Cameraview_model,
     OBJECT_OT_center_mirror,
-    SCENE_OT_scene_pivot
+    SCENE_OT_scene_pivot,
+    OBJECT_OT_cardboard
 )
 
 
