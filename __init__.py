@@ -740,7 +740,7 @@ class PANEL_PT_CartonUVMapping(bpy.types.Panel):
     
         box = layout.box()                        #big buttons aligned
         col = box.column(align = True)
-        col.label(text='Project Each Face to a View for Mapping')
+        col.label(text='Project Each Face for Mapping')
 
         row = col.row(align=True)
         
