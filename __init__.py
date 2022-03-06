@@ -31,7 +31,7 @@
 
 # <pep8 compliant>
 
-bl_info = {"name": "Carton Helper Panel",
+bl_info = {"name": "Carton Previz Helper",
            "author": "CDMJ",
            "version": (3, 20, 0),
            "blender": (3, 00, 0),
