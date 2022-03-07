@@ -302,6 +302,8 @@ class OBJECT_OT_cartonflat_base(bpy.types.Operator):
     def execute(self, context):
         #add plane to just above the image plane reference
         bpy.ops.mesh.primitive_plane_add(enter_editmode=False, align='WORLD', location=(0, 0, 0.002), scale=(1, 1, 1))
+        bpy.context.object.name = "Carton Flat"
+
         #scale the new plane down to usable scale
         bpy.ops.transform.resize(value=(0.0818148, 0.0818148, 0.0818148), orient_type='GLOBAL')
 
@@ -634,6 +636,76 @@ class OBJECT_OT_Cameraview_model(bpy.types.Operator):
         
         return {'FINISHED'}
     
+class ADDONNAME_OT_add_basic(bpy.types.Operator):
+    bl_label = "Carton Shader Base"
+    bl_idname = "addonname.addbasic_operator"
+    
+    @classmethod
+    def poll(self, context):
+        obj =  context.active_object
+        A = obj is not None
+        if A:
+            B = obj.type == 'MESH'
+            return B
+    
+    def execute(self, context):
+        
+        material_basic = bpy.data.materials.new(name= "Carton Shader Base")
+        material_basic.use_nodes = True
+        
+        bpy.context.object.active_material = material_basic
+        
+        principled_node = material_basic.node_tree.nodes.get('Principled BSDF')
+        
+        ###Principled Node Options
+        principled_node.inputs[0].default_value = (1,0,0,1)
+        principled_node.inputs[6].default_value = (0.2)
+        principled_node.inputs[9].default_value = (0.282)
+        
+        ###Image Texture Node named Dieline        
+        dieline_node = material_basic.node_tree.nodes.new('ShaderNodeTexImage')
+        dieline_node.location = (-600, 400)
+        dieline_node.label = ("Dieline")
+        
+        ###Image Texture named Colormap
+        colormap_node = material_basic.node_tree.nodes.new('ShaderNodeTexImage')
+        colormap_node.location = (-600, 100)
+        colormap_node.label = ("Colormap")
+        
+        ###Image Texture named Bumpmap
+        bumpmap_node = material_basic.node_tree.nodes.new('ShaderNodeTexImage')
+        bumpmap_node.location = (-600, -200)
+        bumpmap_node.label = ("Bumpmap")
+        
+        ###Color Mix Node named Switch
+        mix_node = material_basic.node_tree.nodes.new('ShaderNodeMixRGB')
+        mix_node.location = (-275, 250)
+        mix_node.label = ("Switch")
+        
+        ###Color Mix Node named Switch
+        bump_node = material_basic.node_tree.nodes.new('ShaderNodeBump')
+        bump_node.location = (-275, -200)
+        bump_node.label = ("Perforations")
+        
+        ###UV Mapping Node
+        uv_node = material_basic.node_tree.nodes.new('ShaderNodeUVMap')
+        uv_node.location = (-900, 60)
+        uv_node.label = ("UV Projection")
+        uv_node.uv_map = "UVMap"
+        
+        #####LINKING
+        material_basic.node_tree.links.new(dieline_node.outputs[0], mix_node.inputs [1])
+        material_basic.node_tree.links.new(colormap_node.outputs[0], mix_node.inputs [2])
+        material_basic.node_tree.links.new(mix_node.outputs[0], principled_node.inputs [0])
+        material_basic.node_tree.links.new(bumpmap_node.outputs[0], bump_node.inputs [2])
+        material_basic.node_tree.links.new(bump_node.outputs[0], principled_node.inputs [22])
+        
+        material_basic.node_tree.links.new(uv_node.outputs[0], dieline_node.inputs [0])
+        material_basic.node_tree.links.new(uv_node.outputs[0], colormap_node.inputs [0])
+        material_basic.node_tree.links.new(uv_node.outputs[0], bumpmap_node.inputs [0])
+        
+        return {'FINISHED'}
+    
 
     
     
@@ -801,11 +873,13 @@ class PANEL_PT_CartonFinishing(bpy.types.Panel):
     
     def draw(self, context):
         layout = self.layout
+        obj = context.object
+        
     
         box = layout.box()                        #big buttons aligned
         col = box.column(align = True)
         col.label(text='Presets for Prep of Final Products')
-
+        
         row = col.row(align=True)
         
         row1=row.split(align=True)
@@ -824,9 +898,11 @@ class PANEL_PT_CartonFinishing(bpy.types.Panel):
         row1=row.split(align=True)
         row1.scale_x=0.50
         row1.scale_y=1.25
+        row1.operator("addonname.addbasic_operator", text = "Base Shader", icon = 'CON_FOLLOWTRACK')
         row1.operator("render.render", text = "Render", icon = 'OUTLINER_OB_IMAGE')
-
-classes = (
+        row = col.row(align=True)
+        row.prop(obj, "name")
+classes = [
     OBJECT_OT_front_mapping,
     OBJECT_OT_back_mapping,
     OBJECT_OT_top_mapping,
@@ -849,8 +925,9 @@ classes = (
     OBJECT_OT_Cameraview_model,
     OBJECT_OT_center_mirror,
     SCENE_OT_scene_pivot,
-    OBJECT_OT_cardboard
-)
+    OBJECT_OT_cardboard,
+    ADDONNAME_OT_add_basic
+]
 
 
 def register():
