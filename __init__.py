@@ -758,44 +758,35 @@ class PANEL_PT_CartonPrimitives(bpy.types.Panel):
         row1=row.split(align=True)
         row1.scale_x=0.50
         row1.scale_y=1.25
-        row1.operator("object.carton_base", text = "Carton 3D Base", icon = 'VIEW3D')
+        row1.operator("import_image.to_plane", text="Load Dieline", icon = 'MESH_GRID')
         row2 = row.split(align=True)
         row2.scale_x=0.50
         row2.scale_y=1.25
-        row2.operator("object.cartonflat_base", text = "Flat Carton", icon = 'MOD_MESHDEFORM')
-
-        row = layout.row()
-        row = col.row(align=True)
-        row.scale_x=0.50
-        row.scale_y = 1.25
-        row1 = row.split(align=True)
-        row1.operator("object.add_bevel", text = "Bevel", icon = 'MESH_ICOSPHERE')
-        
-        row1.operator("object.wire_draw", text = "Wire", icon = 'MOD_SOLIDIFY')
+        row2.operator("image.cameraview_model", text = "DieCam", icon ="OUTLINER_OB_CAMERA")
                 
         row = layout.row()
         row = col.row(align=True)
         row.scale_x=0.50
         row.scale_y = 1.25
         row2 = row.split(align=True)
-        row2.operator("import_image.to_plane", text="Load Dieline", icon = 'MESH_GRID')
-        row2.operator("image.cameraview_model", text = "DieCam", icon ="OUTLINER_OB_CAMERA")
-
-        
+        row2.operator("object.carton_base", text = "Carton 3D Base", icon = 'VIEW3D')
+        row2.operator("object.cartonflat_base", text = "Flat Carton", icon = 'MOD_MESHDEFORM')
+                
         row = layout.row()
         row = col.row(align=True)
         row.scale_x=0.50
         row.scale_y = 1.25
         row3 = row.split(align=True)
-        row3.operator("object.center_mirror", text = "Add Mirror", icon = 'ORIENTATION_VIEW')
-        row3.operator("object.apply_xmirror", text = "XMirror", icon = 'MOD_MIRROR')
+        row3.operator("object.wire_draw", text = "Wire", icon = 'MOD_SOLIDIFY')
+        row3.operator("scene.pivot", text="Toggle Pivot", icon = 'PIVOT_CURSOR')
 
         row = layout.row()
         row = col.row(align=True)
         row.scale_x=0.50
         row.scale_y = 1.25
         row = row.split(align=False)
-        row.operator("scene.pivot", text="Toggle Pivot", icon = 'PIVOT_CURSOR')
+        row.operator("object.center_mirror", text = "Add Mirror", icon = 'ORIENTATION_VIEW')
+        row.operator("object.apply_xmirror", text = "XMirror", icon = 'MOD_MIRROR')
         
         
 class PANEL_PT_CartonUVMapping(bpy.types.Panel):
@@ -894,14 +885,31 @@ class PANEL_PT_CartonFinishing(bpy.types.Panel):
         row2.operator("object.cardboard", text = "Cardboard Set", icon = 'MOD_LINEART')
         
         row = col.row(align=True)
-       
-        row1=row.split(align=True)
-        row1.scale_x=0.50
-        row1.scale_y=1.25
+        row = layout.row()
+        row = col.row(align=True)
+        row.scale_x=0.50
+        row.scale_y = 1.25
+        row1 = row.split(align=True)
+        row1.operator("object.add_bevel", text = "Bevel", icon = 'MESH_ICOSPHERE')
         row1.operator("addonname.addbasic_operator", text = "Base Shader", icon = 'CON_FOLLOWTRACK')
-        row1.operator("render.render", text = "Render", icon = 'OUTLINER_OB_IMAGE')
+        
+        #row = col.row(align=True)
+        row = layout.row()
+        row2=row.split(align=True)
+        row2.scale_x=0.50
+        row2.scale_y=1.25
+        
+        row2.operator("render.render", text = "Render", icon = 'OUTLINER_OB_IMAGE')
+        
         row = col.row(align=True)
         row.prop(obj, "name")
+
+        
+
+
+
+
+
 classes = [
     OBJECT_OT_front_mapping,
     OBJECT_OT_back_mapping,
