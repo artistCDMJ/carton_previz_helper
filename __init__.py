@@ -707,7 +707,7 @@ class CARTONVIZ_OT_add_basic(bpy.types.Operator):
         return {'FINISHED'}
 
 class CARTONVIZ_OT_add_fiberboard(bpy.types.Operator):
-    bl_label = "Carton Fiberboard Shader"
+    bl_label = "Fiberboard Shader"
     bl_idname = "cartonviz.add_fiberboard"
     
     @classmethod
@@ -837,7 +837,7 @@ class CARTONVIZ_OT_add_fiberboard(bpy.types.Operator):
         return {'FINISHED'}
 
 class CARTONVIZ_OT_add_corrugate(bpy.types.Operator):
-    bl_label = "Carton Cardboard Shader"
+    bl_label = "Corrugate Shader"
     bl_idname = "cartonviz.add_corrugate"
     
     @classmethod
