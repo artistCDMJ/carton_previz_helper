@@ -637,7 +637,7 @@ class OBJECT_OT_Cameraview_model(bpy.types.Operator):
         return {'FINISHED'}
     
 class CARTONVIZ_OT_add_basic(bpy.types.Operator):
-    bl_label = "Carton Shader Base"
+    bl_label = "Carton Dieline"
     bl_idname = "cartonviz.addbasic_operator"
     
     @classmethod
