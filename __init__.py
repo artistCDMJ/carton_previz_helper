@@ -393,7 +393,7 @@ class OBJECT_OT_apply_xmirror(bpy.types.Operator):
         bpy.ops.object.convert(target='MESH')
         #bpy.ops.object.editmode_toggle()
         bpy.context.object.data.use_mirror_x = True
-        bpy.context.object.data.use_mirror_topology = True
+        bpy.context.object.data.use_mirror_topology = False
         #change to Edge and Face Select to prepare for Folding Stage
         bpy.context.tool_settings.mesh_select_mode = (False, True, True)
         
@@ -636,9 +636,9 @@ class OBJECT_OT_Cameraview_model(bpy.types.Operator):
         
         return {'FINISHED'}
     
-class ADDONNAME_OT_add_basic(bpy.types.Operator):
+class CARTONVIZ_OT_add_basic(bpy.types.Operator):
     bl_label = "Carton Shader Base"
-    bl_idname = "addonname.addbasic_operator"
+    bl_idname = "cartonviz.addbasic_operator"
     
     @classmethod
     def poll(self, context):
@@ -705,7 +705,243 @@ class ADDONNAME_OT_add_basic(bpy.types.Operator):
         material_basic.node_tree.links.new(uv_node.outputs[0], bumpmap_node.inputs [0])
         
         return {'FINISHED'}
+
+class CARTONVIZ_OT_add_fiberboard(bpy.types.Operator):
+    bl_label = "Carton Fiberboard Shader"
+    bl_idname = "cartonviz.add_fiberboard"
     
+    @classmethod
+    def poll(self, context):
+        obj =  context.active_object
+        A = obj is not None
+        if A:
+            B = obj.type == 'MESH'
+            return B
+    
+    def execute(self, context):
+        
+        material_fiber = bpy.data.materials.new(name= "Carton FiberBoard Shader")
+        material_fiber.use_nodes = True
+        bpy.ops.object.material_slot_add()
+
+        bpy.context.object.active_material = material_fiber
+        
+        material_fiber.pass_index = 1
+
+        #Principled Main Shader in Tree
+        principled_node = material_fiber.node_tree.nodes.get('Principled BSDF')
+        
+        ###Principled Node Options for Fiberboard
+        principled_node.inputs[0].default_value = (1,1,1,1)
+        principled_node.inputs[9].default_value = (0.575)
+        
+        ###Tex Coordinate Node       
+        texcoord = material_fiber.node_tree.nodes.new('ShaderNodeTexCoord')
+        texcoord.location = (-1200, 400)
+        texcoord.label = ("Coordinate Control")
+        
+        ###Mapping Node       
+        mapping = material_fiber.node_tree.nodes.new('ShaderNodeMapping')
+        mapping.location = (-1000, 400)
+        mapping.label = ("Mapping Control")
+        
+        ###Voronoi Tex Node       
+        voronoi = material_fiber.node_tree.nodes.new('ShaderNodeTexVoronoi')
+        voronoi.location = (-800, 400)
+        voronoi.label = ("Clumping Pattern")
+        voronoi.inputs[2].default_value = 1
+
+        
+        ###Musgrave Tex Node       
+        mus1 = material_fiber.node_tree.nodes.new('ShaderNodeTexMusgrave')
+        mus1.location = (-700, 400)
+        mus1.label = ("Breaking Pattern")
+        mus1.musgrave_type = 'HYBRID_MULTIFRACTAL'
+        mus1.inputs[2].default_value = 368.4
+        mus1.inputs[3].default_value = 15
+        mus1.inputs[4].default_value = 62.4
+        mus1.inputs[5].default_value = 1.1
+        
+        ###Color Mix Node Mix
+        mix = material_fiber.node_tree.nodes.new('ShaderNodeMixRGB')
+        mix.location = (-500, 400)
+        mix.blend_type = 'MIX'
+        mix.label = ("Color Mix")
+        mix.inputs[1].default_value = (0.0784733, 0.0723242, 0.0403656, 1)
+        mix.inputs[2].default_value = (0.134364, 0.117563, 0.0779412, 1)
+
+        
+
+
+        
+        ###Musgrave Tex Node       
+        mus2 = material_fiber.node_tree.nodes.new('ShaderNodeTexMusgrave')
+        mus2.location = (-800, 100)
+        mus2.label = ("overlay Pattern")
+        mus2.musgrave_type = 'FBM'
+        mus2.inputs[2].default_value = 57.7
+        mus2.inputs[3].default_value = 2.0
+        mus2.inputs[4].default_value = 2.0
+        mus2.inputs[5].default_value = 2.0
+        
+        ###Ramp for Overlay       
+        ramp = material_fiber.node_tree.nodes.new('ShaderNodeValToRGB')
+        ramp.location = (-700, 100)
+        ramp.label = ("Spread of Overlay")
+        ramp.color_ramp.elements[0].position = 0.5
+
+        #ramp.elements[0].position = 0.513636
+        
+        ###Color Invert Node       
+        invert = material_fiber.node_tree.nodes.new('ShaderNodeInvert')
+        invert.location = (-500, 100)
+        invert.label = ("overlay Pattern")
+
+                
+        ###Color Mix Node Multiply
+        mult = material_fiber.node_tree.nodes.new('ShaderNodeMixRGB')
+        mult.location = (-275, 400)
+        mult.blend_type = 'MULTIPLY'
+        mult.label = ("Multiplied Fiber")
+        
+        ###Color Mix Node Color
+        color = material_fiber.node_tree.nodes.new('ShaderNodeMixRGB')
+        color.location = (-200, 400)
+        color.blend_type = 'MULTIPLY'
+        color.label = ("Color Overlay")
+        color.inputs[2].default_value = (0.5, 0.346006, 0.190594, 1)
+        color.inputs[0].default_value = 0.125
+        
+
+        
+        
+        
+        
+        #####LINKING
+        link = material_fiber.node_tree.links.new
+        
+        link(texcoord.outputs[0], mapping.inputs [0])
+        link(mapping.outputs[0], voronoi.inputs [0])
+        link(mapping.outputs[0], mus2.inputs [0])
+        link(voronoi.outputs[0], mus1.inputs [6])
+        link(mus1.outputs[0], mix.inputs [0])
+        link(mix.outputs[0], mult.inputs [1])
+        link(mus2.outputs[0], ramp.inputs [0])
+        link(ramp.outputs[0], invert.inputs [1])
+        link(invert.outputs[0], mult.inputs [2])
+        link(mult.outputs[0], color.inputs [1])
+        link(color.outputs[0], principled_node.inputs [0])
+        
+
+            
+        return {'FINISHED'}
+
+class CARTONVIZ_OT_add_corrugate(bpy.types.Operator):
+    bl_label = "Carton Cardboard Shader"
+    bl_idname = "cartonviz.add_corrugate"
+    
+    @classmethod
+    def poll(self, context):
+        obj =  context.active_object
+        A = obj is not None
+        if A:
+            B = obj.type == 'MESH'
+            return B
+    
+    def execute(self, context):
+        
+        material_corrugate = bpy.data.materials.new(name= "Carton Cardboard Shader")
+        material_corrugate.use_nodes = True
+        bpy.ops.object.material_slot_add()
+
+        bpy.context.object.active_material = material_corrugate
+        
+        material_corrugate.pass_index = 1
+
+        #Principled Main Shader in Tree
+        principled_node = material_corrugate.node_tree.nodes.get('Principled BSDF')
+        
+        ###Principled Node Options for Fiberboard
+        principled_node.inputs[0].default_value = (1,1,1,1)
+        #principled_node.inputs[9].default_value = (0.575)
+        
+        ###Tex Coordinate Node       
+        texcoord = material_corrugate.node_tree.nodes.new('ShaderNodeTexCoord')
+        texcoord.location = (-1400, 400)
+        texcoord.label = ("Coordinate Control")
+        
+        ###Mapping Node       
+        mapping = material_corrugate.node_tree.nodes.new('ShaderNodeMapping')
+        mapping.location = (-1200, 400)
+        mapping.label = ("Mapping Control")
+        
+        ###Musgrave Tex Node       
+        musG = material_corrugate.node_tree.nodes.new('ShaderNodeTexMusgrave')
+        musG.location = (-1000, 300)
+        musG.label = ("Fine Detail")
+        musG.musgrave_type = 'FBM'
+        musG.inputs[2].default_value = 392.5
+        musG.inputs[3].default_value = 4.7
+        musG.inputs[4].default_value = 2.0
+        musG.inputs[5].default_value = 21.6
+
+        
+        ###Wave Tex Node       
+        wave = material_corrugate.node_tree.nodes.new('ShaderNodeTexWave')
+        wave.location = (-800, 400)
+        wave.label = ("Corrugate Pattern")
+        wave.wave_type = 'BANDS'
+        wave.wave_profile = 'SIN'
+        wave.inputs[1].default_value = 19.3
+        wave.inputs[2].default_value = 1.7
+        wave.inputs[3].default_value = 7.2
+        wave.inputs[4].default_value = 1.0
+        wave.inputs[5].default_value = 0.846
+        
+        ###Color Mix Node Mix
+        mix = material_corrugate.node_tree.nodes.new('ShaderNodeMixRGB')
+        mix.location = (-600, 400)
+        mix.blend_type = 'MIX'
+        mix.label = ("Color Mix")
+        mix.inputs[1].default_value = (0.768151, 0.527115, 0.304987, 1)
+        mix.inputs[2].default_value = (0.418289, 0.285621, 0.153472, 1)
+        
+        ###Color Mix Node Multiply
+        mult = material_corrugate.node_tree.nodes.new('ShaderNodeMixRGB')
+        mult.location = (-600, 400)
+        mult.blend_type = 'MULTIPLY'
+        mult.label = ("Color Multiply")        
+        mult.inputs[2].default_value = (0.569034, 0.242213, 0.0763981, 1)        
+
+        ###Bump Node
+        bump = material_corrugate.node_tree.nodes.new('ShaderNodeBump')
+        bump.location = (-600, 100)
+        bump.inputs[0].default_value = 0.092
+        
+        
+        
+
+        
+        
+        
+        
+        #####LINKING
+        link = material_corrugate.node_tree.links.new
+        
+        link(texcoord.outputs[0], mapping.inputs [0])
+        link(mapping.outputs[0], musG.inputs [0])
+        link(mapping.outputs[0], wave.inputs [0])
+        link(musG.outputs[0], wave.inputs [6])
+        link(wave.outputs[0], mix.inputs [0])
+        link(wave.outputs[0], bump.inputs [2])
+        link(mix.outputs[0], mult.inputs [1])
+        link(mult.outputs[0], principled_node.inputs [0])
+        link(bump.outputs[0], principled_node.inputs [22])
+        
+        
+
+            
+        return {'FINISHED'} 
 
     
     
@@ -891,7 +1127,18 @@ class PANEL_PT_CartonFinishing(bpy.types.Panel):
         row.scale_y = 1.25
         row1 = row.split(align=True)
         row1.operator("object.add_bevel", text = "Bevel", icon = 'MESH_ICOSPHERE')
-        row1.operator("addonname.addbasic_operator", text = "Base Shader", icon = 'CON_FOLLOWTRACK')
+        row1.operator("cartonviz.addbasic_operator", text = "Base Shader", icon = 'CON_FOLLOWTRACK')
+        
+        row = col.row(align=True)
+        row = layout.row()
+        row = col.row(align=True)
+        row.scale_x=0.50
+        row.scale_y = 1.25
+        row1 = row.split(align=True)
+        row1.operator("cartonviz.add_fiberboard", text = "Fiberboard", icon = 'MESH_GRID')
+        row1.operator("cartonviz.add_corrugate", text = "Corrugate", icon = 'ALIGN_JUSTIFY')
+        
+        #cartonviz.add_fiberboard
         
         #row = col.row(align=True)
         row = layout.row()
@@ -934,19 +1181,13 @@ classes = [
     OBJECT_OT_center_mirror,
     SCENE_OT_scene_pivot,
     OBJECT_OT_cardboard,
-    ADDONNAME_OT_add_basic
+    CARTONVIZ_OT_add_basic,
+    CARTONVIZ_OT_add_fiberboard,
+    CARTONVIZ_OT_add_corrugate
 ]
 
 
-def register():
-    for cls in classes:
-        bpy.utils.register_class(cls)
-
-
-def unregister():
-    for cls in classes:
-        bpy.utils.unregister_class(cls)
-
+register, unregister = bpy.utils.register_classes_factory(classes)
 
 if __name__ == '__main__':
     register()
