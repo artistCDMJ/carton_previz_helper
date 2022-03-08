@@ -34,3 +34,5 @@ Flat Folded Carton Workflow (03/08/22)
     • Beveling can be done with the ‘Bevel’ button, but manual bevel edits can give a better result.
     • Rename the object with the ‘ Name:’ field, and hover over it to copy the name to then paste in when (M)oving to a New Collection. Also pays to paste that same name onto the Shader name for keeping multiple cartons available in file.
     • WIP – A single bone with pose library is a manual set up for now, but later the intent is to have this generated via button press so that standard poses for camera are automatic.
+
+New changes will be updated as they come.
