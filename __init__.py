@@ -23,7 +23,7 @@
 
 bl_info = {"name": "Carton PreViz Helper",
            "author": "CDMJ",
-           "version": (3, 20, 0),
+           "version": (3, 30, 0),
            "blender": (3, 00, 0),
            "location": "Toolbar > Misc Tab > Carton Panel",
            "description": "Carton Previs Studio Tool",
@@ -637,7 +637,7 @@ class OBJECT_OT_Cameraview_model(bpy.types.Operator):
         return {'FINISHED'}
     
 class CARTONVIZ_OT_add_basic(bpy.types.Operator):
-    bl_label = "Carton Dieline"
+    bl_label = "Carton Shader Base"
     bl_idname = "cartonviz.addbasic_operator"
     
     @classmethod
@@ -693,21 +693,50 @@ class CARTONVIZ_OT_add_basic(bpy.types.Operator):
         uv_node.label = ("UV Projection")
         uv_node.uv_map = "UVMap"
         
-        #####LINKING
-        material_basic.node_tree.links.new(dieline_node.outputs[0], mix_node.inputs [1])
-        material_basic.node_tree.links.new(colormap_node.outputs[0], mix_node.inputs [2])
-        material_basic.node_tree.links.new(mix_node.outputs[0], principled_node.inputs [0])
-        material_basic.node_tree.links.new(bumpmap_node.outputs[0], bump_node.inputs [2])
-        material_basic.node_tree.links.new(bump_node.outputs[0], principled_node.inputs [22])
+        ###Color Mix Node named Multiply
+        mix_node2 = material_basic.node_tree.nodes.new('ShaderNodeMixRGB')
+        mix_node2.location = (-175, 100)
+        mix_node2.label = ("Multiply Tex")
+        mix_node2.inputs[0].default_value = 0.475
         
-        material_basic.node_tree.links.new(uv_node.outputs[0], dieline_node.inputs [0])
-        material_basic.node_tree.links.new(uv_node.outputs[0], colormap_node.inputs [0])
-        material_basic.node_tree.links.new(uv_node.outputs[0], bumpmap_node.inputs [0])
+        ###Mapping node for texture
+        mapping = material_basic.node_tree.nodes.new('ShaderNodeMapping')
+        mapping.location = (-175, 100)
+        mapping.label = ("Mapping of Pattern")
+        mapping.inputs[2].default_value[2] = 0.785398
+        
+        ###Brick Tex Node named Print Pattern
+        brick = material_basic.node_tree.nodes.new('ShaderNodeTexBrick')
+        brick.location = (-75, 100)
+        brick.offset_frequency = 1
+        brick.squash_frequency = 24
+        brick.inputs[3].default_value = (0,0,0,0)
+        brick.inputs[4].default_value = 800
+        brick.inputs[7].default_value = -0.680
+        brick.inputs[9].default_value = 0.50
+        
+        
+        
+        #####LINKING
+        link = material_basic.node_tree.links.new
+        link(dieline_node.outputs[0], mix_node.inputs [1])
+        link(colormap_node.outputs[0], mix_node.inputs [2])
+        link(mix_node.outputs[0], mix_node2.inputs [1])
+        link(bumpmap_node.outputs[0], bump_node.inputs [2])
+        link(bump_node.outputs[0], principled_node.inputs [22])
+        
+        link(uv_node.outputs[0], dieline_node.inputs [0])
+        link(uv_node.outputs[0], colormap_node.inputs [0])
+        link(uv_node.outputs[0], bumpmap_node.inputs [0])
+        link(uv_node.outputs[0], mapping.inputs [0])
+        link(mapping.outputs[0], brick.inputs [0])
+        link(brick.outputs[0], mix_node2.inputs [2])
+        link(mix_node2.outputs[0], principled_node.inputs [0])
         
         return {'FINISHED'}
 
 class CARTONVIZ_OT_add_fiberboard(bpy.types.Operator):
-    bl_label = "Fiberboard Shader"
+    bl_label = "Carton Fiberboard Shader"
     bl_idname = "cartonviz.add_fiberboard"
     
     @classmethod
