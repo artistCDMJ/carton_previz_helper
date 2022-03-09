@@ -698,6 +698,7 @@ class CARTONVIZ_OT_add_basic(bpy.types.Operator):
         mix_node2.location = (-175, 100)
         mix_node2.label = ("Multiply Tex")
         mix_node2.inputs[0].default_value = 0.475
+        mix_node2.blend_type = 'MULTIPLY'
         
         ###Mapping node for texture
         mapping = material_basic.node_tree.nodes.new('ShaderNodeMapping')
