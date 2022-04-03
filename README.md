@@ -4,8 +4,7 @@ Carton PreViz Helper addon
 
 **Simple Carton Workflow**(03/08/22)
 
-    • Set Scene Units with the Imperial or Metric buttons depending on measurements provided
-    • Add a New Carton using the Carton 3D Base button, and input the measurements in the popup dialog in the lower corner
+    • Set the mm or inches, input the dimensions in x,y, and z, name the product type/product number and choos 'Carton 3D Base' and press'Generate'
     • In Carton Finishing Tools, add the Base Shader and in the Shader Editor, add the corresponding Dieline, Colormap and Bumpmap images exported form the vector software
     • in UV Editing Workspace, use the Face Selection in Edit mode to select the faces of the Carton one at a time, projecting them onto the UV Editor with the Face project buttons in Carton UV Mapping Tools.
     • Swap to Shading Workspace and Apply Scale and Rotation with Ctrl-A. Use Center Object in Carton Finishing tools  to snap the cursor and the carton to the World Origin to align to the Scene.
@@ -14,7 +13,7 @@ Carton PreViz Helper addon
 
 **Flat Folded Carton Workflow** (03/08/22)
 
-    • Set Scene Units with the Imperial or Metric buttons depending on measurements provided.
+    • Set the mm or inches, input the dimensions in x,y, and z, name the product type/product number and choos 'Carton 2D Flat' and press'Generate'
     • Focusing on the Carton Modeling Tools, use the button ‘Load Dieline’ to bring the main dieline art into the 3d view with the Images as Planes Addon – choose ‘Flat’ and ‘Texture’ in the view properties.
     • With the Dieline plane selected, use the ‘Die Cam’ button to set a working camera to model in that will allow UV Project from View after modeling is final.
     • Initiate modeling with ‘Flat Carton’ and use ‘Wire’ to toggle wire view so that modeling can be carried out in Edit mode while still seeing the dieline art.
