@@ -21,10 +21,10 @@
 
 # <pep8 compliant>
 
-bl_info = {"name": "Carton PreViz Helper",
+bl_info = {"name": "Carton Viz Helper",
            "author": "CDMJ",
-           "version": (3, 30, 0),
-           "blender": (3, 00, 0),
+           "version": (3, 40, 0),
+           "blender": (3, 10, 0),
            "location": "Toolbar > Misc Tab > Carton Panel",
            "description": "Carton Previs Studio Tool",
            "warning": "",
@@ -37,6 +37,27 @@ from bpy_extras.object_utils import AddObjectHelper, object_data_add
 from mathutils import Vector
 
 
+class MyProperties(bpy.types.PropertyGroup):
+    
+    my_string : bpy.props.StringProperty(name= "Product")
+    
+    my_float_vector : bpy.props.FloatVectorProperty(name= "Scale", soft_min= 0, soft_max= 1000, default= (1,1,1))
+    
+    my_enum : bpy.props.EnumProperty(
+        name= "Base",
+        description= "sample text",
+        items= [('OP1', "Carton 3D Base", ""),
+                ('OP2', "Carton 2D Flat", "")                
+        ]
+    )
+    my_enum_unit : bpy.props.EnumProperty(
+        name= "Units",
+        description= "sample text",
+        items= [('UN1', "Millimeters mm", ""),
+                ('UN2', "Inches IN", "")
+                
+        ]
+    )
 
 class OBJECT_OT_front_mapping(bpy.types.Operator):
     """Project selected face to UV Map in UV Editor using Shift to Front View and Project"""
@@ -185,130 +206,87 @@ class OBJECT_OT_right_mapping(bpy.types.Operator):
         bpy.ops.uv.project_from_view(camera_bounds=True, correct_aspect=True, scale_to_bounds=False)       
                 
         return {'FINISHED'}
-
-
-class VIEW3D_OT_imperial_measurement(bpy.types.Operator):
-    """Sets World Units to Imperial to input Inches and Feet"""
-    bl_idname = "object.imperial_measure"
-
-
-    bl_label = "Imperial Measurement"
-    bl_options = { 'REGISTER', 'UNDO' }
-
-    def execute(self, context):
-
-        scene = context.scene
-
-
-        #new code
-
-        bpy.context.scene.unit_settings.system = 'IMPERIAL'
-
-        return {'FINISHED'}
-
-class VIEW3D_OT_metric_measurement(bpy.types.Operator):
-    """Sets World Units to Metric to input Centimeters and Millimeters"""
-    bl_idname = "object.metric_measure"
-
-
-    bl_label = "Metric Measurement"
-    bl_options = { 'REGISTER', 'UNDO' }
-
-    def execute(self, context):
-
-        scene = context.scene
-
-
-        #new code
-
-        bpy.context.scene.unit_settings.system = 'METRIC'
-
-        return {'FINISHED'}
-
-###################***************************experimental feature for carton :D robbed from templates
-def add_object(self, context):
-    scale_x = self.scale.x
-    scale_y = self.scale.y
-    scale_z = self.scale.z
-
-    verts = [
-        (+1.0, +1.0, -1.0),
-        (+1.0, -1.0, -1.0),
-        (-1.0, -1.0, -1.0),
-        (-1.0, +1.0, -1.0),
-        (+1.0, +1.0, +1.0),
-        (+1.0, -1.0, +1.0),
-        (-1.0, -1.0, +1.0),
-        (-1.0, +1.0, +1.0),
-    ]
-    edges = []
-    faces = [
-        (0, 1, 2, 3),
-        (4, 7, 6, 5),
-        (0, 4, 5, 1),
-        (1, 5, 6, 2),
-        (2, 6, 7, 3),
-        (4, 0, 3, 7),
-    ]
-
-    # apply size
-    for i, v in enumerate(verts):
-        verts[i] = v[0] * scale_x, v[1] * scale_y, v[2] * scale_z
-
-    #return verts, faces
-
-    mesh = bpy.data.meshes.new(name="New Carton Base")
-    mesh.from_pydata(verts, edges, faces)
-    # useful for development when the mesh may be invalid.
-    # mesh.validate(verbose=True)
-    object_data_add(context, mesh, operator=self)
-
-
-
-class OBJECT_OT_carton_base(bpy.types.Operator, AddObjectHelper):
-    """Add Carton 3D Base at Cursor Position - adjust Dimensions in Item Panel"""
-    bl_idname = "object.carton_base"
-    bl_label = "Carton 3D Base"
-    bl_options = { 'REGISTER', 'UNDO' }
-
-
-    scale: FloatVectorProperty(
-        name="scale",
-        default=(1.0, 1.0, 1.0),
-        subtype='TRANSLATION',
-        description="scaling",
-    )
-
-    def execute(self, context):
-
-        add_object(self, context)
-
-        return {'FINISHED'}
     
-class OBJECT_OT_cartonflat_base(bpy.types.Operator):
-    """Add Plane for Construct of Carton Flat"""
-    bl_idname = "object.cartonflat_base"
-    bl_label = "Carton Flat Base"
-    bl_options = { 'REGISTER', 'UNDO' }
-
-
-    scale: FloatVectorProperty(
-        name="scale",
-        default=(0.1, 0.1, 0.1),
-        subtype='TRANSLATION',
-        description="scaling",
-    )
-
+    
+############################## NEW HOTNESS
+class CARTONVIZ_OT_my_op(bpy.types.Operator):
+    bl_label = "Add Carton Object"
+    bl_idname = "cartonviz.myop_operator"
+        
+    
     def execute(self, context):
-        #add plane to just above the image plane reference
-        bpy.ops.mesh.primitive_plane_add(enter_editmode=False, align='WORLD', location=(0, 0, 0.002), scale=(1, 1, 1))
-        bpy.context.object.name = "Carton Flat"
+        scene = context.scene
+        mytool = scene.my_tool
+        
+        if mytool.my_enum == 'OP1':
+            bpy.ops.mesh.primitive_cube_add()
+            bpy.context.object.name = mytool.my_string
+            ########### if statements for mm or IN
+            if mytool.my_enum_unit == 'UN1':
+                #then do this stuff
+                bpy.context.scene.unit_settings.system = 'METRIC'
+                bpy.context.scene.unit_settings.length_unit = 'MILLIMETERS'
+            
+                ###new code
+                x = mytool.my_float_vector[0] * 0.001
+                y = mytool.my_float_vector[1] * 0.001
+                z = mytool.my_float_vector[2] * 0.001
+            
+                bpy.context.object.dimensions = [x,y,z]
+                
+            elif mytool.my_enum_unit == 'UN2':
+                #then do this instead
+                bpy.context.scene.unit_settings.system = 'IMPERIAL'
+                bpy.context.scene.unit_settings.length_unit = 'INCHES'
+                # 276 / 7.00 = 39.42857142857143
+                # 187 / 4.75 = 39.36842105263158
+                # 197 / 5.00 = 39.4
+                # 
+                ###new code
+                x = mytool.my_float_vector[0] / 39.38
+                y = mytool.my_float_vector[1] / 39.38
+                z = mytool.my_float_vector[2] / 39.38
+            
+                bpy.context.object.dimensions = [x,y,z]
+                
 
-        #scale the new plane down to usable scale
-        bpy.ops.transform.resize(value=(0.0818148, 0.0818148, 0.0818148), orient_type='GLOBAL')
-
+        if mytool.my_enum == 'OP2':
+            #add plane to just above the image plane reference
+            bpy.ops.mesh.primitive_plane_add(enter_editmode=False, align='WORLD', location=(0, 0, 0.002), scale=(1, 1, 1))
+            bpy.context.object.name = mytool.my_string
+            ########### if statements for mm or IN
+            if mytool.my_enum_unit == 'UN1':
+                #then do this stuff
+                bpy.context.scene.unit_settings.system = 'METRIC'
+                bpy.context.scene.unit_settings.length_unit = 'MILLIMETERS'
+            
+                ###new code
+                x = mytool.my_float_vector[0] * 0.001
+                y = mytool.my_float_vector[1] * 0.001
+                z = mytool.my_float_vector[2] * 0.001
+            
+                bpy.context.object.dimensions = [x,y,z]
+                
+            elif mytool.my_enum_unit == 'UN2':
+                #then do this instead
+                bpy.context.scene.unit_settings.system = 'IMPERIAL'
+                bpy.context.scene.unit_settings.length_unit = 'INCHES'
+                # 276 / 7.00 = 39.42857142857143
+                # 187 / 4.75 = 39.36842105263158
+                # 197 / 5.00 = 39.4
+                # 
+                ###new code
+                x = mytool.my_float_vector[0] / 39.38
+                y = mytool.my_float_vector[1] / 39.38
+                z = mytool.my_float_vector[2] / 39.38
+            
+                bpy.context.object.dimensions = [x,y,z]
+          
 
         return {'FINISHED'}
+
+############################################## New Hotness End
+
 
 class OBJECT_OT_add_bevel(bpy.types.Operator):
     """Applies Scale and Adds Bevel Modifier to 3D Carton Base"""
@@ -353,9 +331,7 @@ class OBJECT_OT_wire_draw(bpy.types.Operator):
         else:
             bpy.context.object.display_type = 'WIRE'
             
-        #toggle editmode - NIX THAT, too many button presses
-        #bpy.ops.object.editmode_toggle()
-        #set selection mode
+ 
         bpy.context.tool_settings.mesh_select_mode = (True, True, False)
         return {'FINISHED'}
 
@@ -420,8 +396,7 @@ class OBJECT_OT_select_project(bpy.types.Operator):
 
     def execute(self, context):
         
-        #bpy.ops.mesh.select_all(action='TOGGLE')
-        #bpy.ops.mesh.select_all()
+       
 
         bpy.ops.uv.project_from_view(camera_bounds=True, correct_aspect=False, scale_to_bounds=False)
 
@@ -467,11 +442,7 @@ class SCENE_OT_scene_pivot(bpy.types.Operator):
             bpy.context.scene.tool_settings.transform_pivot_point = 'MEDIAN_POINT'
         else:
             bpy.context.scene.tool_settings.transform_pivot_point = 'CURSOR'
-            
-        #toggle editmode - NIX THAT, too many button presses
-        #bpy.ops.object.editmode_toggle()
-        #set selection mode
-        #bpy.context.tool_settings.mesh_select_mode = (True, True, False)
+  
         return {'FINISHED'}
     
     
@@ -528,11 +499,7 @@ class OBJECT_OT_Cameraview_model(bpy.types.Operator):
 
         obj = context.active_object
 
-       # if obj:
-       #     mode = obj.mode
-       #     # aslkjdaslkdjasdas
-       #     if mode == 'TEXTURE_PAINT':
-       #         bpy.ops.paint.texture_paint_toggle()
+
 
         #save selected plane by rename
         bpy.context.object.name = "ref_dieline_proxy"
@@ -587,8 +554,6 @@ class OBJECT_OT_Cameraview_model(bpy.types.Operator):
         #switch on composition guides for use in cameraview paint
         
         bpy.context.object.data.show_composition_center = True
-
-
 
 
         #found on net Atom wrote this simple script
@@ -801,9 +766,6 @@ class CARTONVIZ_OT_add_fiberboard(bpy.types.Operator):
         mix.inputs[2].default_value = (0.134364, 0.117563, 0.0779412, 1)
 
         
-
-
-        
         ###Musgrave Tex Node       
         mus2 = material_fiber.node_tree.nodes.new('ShaderNodeTexMusgrave')
         mus2.location = (-800, 100)
@@ -841,11 +803,7 @@ class CARTONVIZ_OT_add_fiberboard(bpy.types.Operator):
         color.label = ("Color Overlay")
         color.inputs[2].default_value = (0.5, 0.346006, 0.190594, 1)
         color.inputs[0].default_value = 0.125
-        
 
-        
-        
-        
         
         #####LINKING
         link = material_fiber.node_tree.links.new
@@ -947,12 +905,7 @@ class CARTONVIZ_OT_add_corrugate(bpy.types.Operator):
         bump = material_corrugate.node_tree.nodes.new('ShaderNodeBump')
         bump.location = (-600, 100)
         bump.inputs[0].default_value = 0.092
-        
-        
-        
 
-        
-        
         
         
         #####LINKING
@@ -973,36 +926,7 @@ class CARTONVIZ_OT_add_corrugate(bpy.types.Operator):
             
         return {'FINISHED'} 
 
-    
-    
 
-class PANEL_PT_carton_panel(bpy.types.Panel):
-    """A custom panel in the viewport toolbar"""
-    bl_idname = "Carton_panel"
-    bl_space_type = 'VIEW_3D'
-    bl_label = "Carton Units"
-    bl_region_type = "UI"
-    bl_category = "Carton Viz Helper"
-    bl_options = {'DEFAULT_CLOSED'}
-    
-
-    
-    def draw(self, context):
-        layout = self.layout
-        
-        box = layout.box()                             #MACRO
-        col = box.column(align = True)
-        col.label(text="Change to Appropriate Units for Scene")
-        row = col.row(align=True)
-        #row.scale_y = 2.0
-        row1=row.split(align=True)
-        row1.scale_x=0.50
-        row1.scale_y=1.25
-        row1.operator("object.imperial_measure", text = "Imperial", icon = 'MOD_DECIM')
-        row2 = row.split(align=True)
-        row2.scale_x=0.50
-        row2.scale_y=1.25
-        row2.operator("object.metric_measure", text = "Metric", icon = 'MOD_BUILD')
         
 class PANEL_PT_CartonPrimitives(bpy.types.Panel):
     """Carton Modeling Tools"""
@@ -1013,8 +937,11 @@ class PANEL_PT_CartonPrimitives(bpy.types.Panel):
     bl_category = "Carton Viz Helper"
     bl_options = {'DEFAULT_CLOSED'}
     
+
     def draw(self, context):
         layout = self.layout
+        scene = context.scene
+        mytool = scene.my_tool
                 
         box = layout.box()                             
         col = box.column(align = True)
@@ -1035,8 +962,25 @@ class PANEL_PT_CartonPrimitives(bpy.types.Panel):
         row.scale_x=0.50
         row.scale_y = 1.25
         row2 = row.split(align=True)
-        row2.operator("object.carton_base", text = "Carton 3D Base", icon = 'VIEW3D')
-        row2.operator("object.cartonflat_base", text = "Flat Carton", icon = 'MOD_MESHDEFORM')
+        row2.prop(mytool, "my_enum_unit")
+        row = layout.row()
+        row = col.row(align=True)
+        row.scale_x=0.50
+        row.scale_y = 1.25
+        row2 = row.split(align=True)
+        row2.prop(mytool, "my_enum")
+        row = layout.row()
+        row = col.row(align=True)
+        row.scale_x=1
+        row.scale_y = 1.00
+        #row2 = row.split(align=True)
+        row.prop(mytool, "my_string")
+        row = layout.row()
+        row = col.row(align=True)
+        row.scale_x=0.75
+        row.scale_y = 1.00
+        #row2 = row.split(align=True)
+        row.prop(mytool, "my_float_vector")
                 
         row = layout.row()
         row = col.row(align=True)
@@ -1178,8 +1122,6 @@ class PANEL_PT_CartonFinishing(bpy.types.Panel):
         
         row2.operator("render.render", text = "Render", icon = 'OUTLINER_OB_IMAGE')
         
-        row = col.row(align=True)
-        row.prop(obj, "name")
 
         
 
@@ -1188,21 +1130,18 @@ class PANEL_PT_CartonFinishing(bpy.types.Panel):
 
 
 classes = [
+    MyProperties,
     OBJECT_OT_front_mapping,
     OBJECT_OT_back_mapping,
     OBJECT_OT_top_mapping,
     OBJECT_OT_bottom_mapping,
     OBJECT_OT_left_mapping,
     OBJECT_OT_right_mapping,
-    VIEW3D_OT_imperial_measurement,
-    VIEW3D_OT_metric_measurement,
-    OBJECT_OT_carton_base,
     OBJECT_OT_add_bevel,
-    PANEL_PT_carton_panel,
+    CARTONVIZ_OT_my_op,
     PANEL_PT_CartonPrimitives,
     PANEL_PT_CartonUVMapping,
     PANEL_PT_CartonFinishing,
-    OBJECT_OT_cartonflat_base,
     OBJECT_OT_wire_draw,
     OBJECT_OT_apply_xmirror,
     OBJECT_OT_select_project,
@@ -1217,7 +1156,16 @@ classes = [
 ]
 
 
-register, unregister = bpy.utils.register_classes_factory(classes)
+def register():
+    for cls in classes:
+        bpy.utils.register_class(cls)
+        
+        bpy.types.Scene.my_tool = bpy.props.PointerProperty(type= MyProperties)
+ 
+def unregister():
+    for cls in classes:
+        bpy.utils.unregister_class(cls)
+        del bpy.types.Scene.my_tool
 
 if __name__ == '__main__':
     register()
