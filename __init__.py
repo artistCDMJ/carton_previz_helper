@@ -972,15 +972,20 @@ class PANEL_PT_CartonPrimitives(bpy.types.Panel):
         row = layout.row()
         row = col.row(align=True)
         row.scale_x=1
-        row.scale_y = 1.00
+        row.scale_y = 1.25
         #row2 = row.split(align=True)
         row.prop(mytool, "my_string")
         row = layout.row()
         row = col.row(align=True)
         row.scale_x=0.75
-        row.scale_y = 1.00
+        row.scale_y = 1.25
         #row2 = row.split(align=True)
-        row.prop(mytool, "my_float_vector")
+        row.prop(mytool, "my_float_vector")#
+        row = layout.row()
+        row = col.row(align=True)
+        row.scale_x=0.75
+        row.scale_y = 1.25
+        row.operator("cartonviz.myop_operator", text = "Generate Carton", icon = 'MOD_EXPLODE')
                 
         row = layout.row()
         row = col.row(align=True)
