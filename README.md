@@ -1,7 +1,8 @@
 # carton_previz_helper
 Carton PreViz Helper addon
 
-Simple Carton Workflow(03/08/22)
+**Simple Carton Workflow**(03/08/22)
+
     • Set Scene Units with the Imperial or Metric buttons depending on measurements provided
     • Add a New Carton using the Carton 3D Base button, and input the measurements in the popup dialog in the lower corner
     • In Carton Finishing Tools, add the Base Shader and in the Shader Editor, add the corresponding Dieline, Colormap and Bumpmap images exported form the vector software
@@ -10,7 +11,8 @@ Simple Carton Workflow(03/08/22)
     • Add a slight bevel to the carton with the Bevel preset button, and set up for render. 
     • WIP – A single bone with pose library is a manual set up for now, but later the intent is to have this generated via button press so that standard poses for camera are automatic.
 
-Flat Folded Carton Workflow (03/08/22)
+**Flat Folded Carton Workflow** (03/08/22)
+
     • Set Scene Units with the Imperial or Metric buttons depending on measurements provided.
     • Focusing on the Carton Modeling Tools, use the button ‘Load Dieline’ to bring the main dieline art into the 3d view with the Images as Planes Addon – choose ‘Flat’ and ‘Texture’ in the view properties.
     • With the Dieline plane selected, use the ‘Die Cam’ button to set a working camera to model in that will allow UV Project from View after modeling is final.
