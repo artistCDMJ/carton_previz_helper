@@ -39,7 +39,7 @@ from mathutils import Vector
 
 class MyProperties(bpy.types.PropertyGroup):
     
-    my_string : bpy.props.StringProperty(name= "Product", description = "Name the Product Number or Type here")
+    my_string : bpy.props.StringProperty(name= "Product")
     
     my_float_vector : bpy.props.FloatVectorProperty(name= "Scale", soft_min= 0, soft_max= 1000, default= (1,1,1))
     
@@ -221,6 +221,8 @@ class CARTONVIZ_OT_my_op(bpy.types.Operator):
         if mytool.my_enum == 'OP1':
             bpy.ops.mesh.primitive_cube_add()
             bpy.context.object.name = mytool.my_string
+            bpy.ops.object.move_to_collection(collection_index=0, is_new=True, new_collection_name=mytool.my_string)
+
             ########### if statements for mm or IN
             if mytool.my_enum_unit == 'UN1':
                 #then do this stuff
