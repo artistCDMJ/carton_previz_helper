@@ -39,20 +39,20 @@ from mathutils import Vector
 
 class MyProperties(bpy.types.PropertyGroup):
     
-    my_string : bpy.props.StringProperty(name= "Product")
+    my_string : bpy.props.StringProperty(name= "Product", description = "Name the Product Number or Type here")
     
     my_float_vector : bpy.props.FloatVectorProperty(name= "Scale", soft_min= 0, soft_max= 1000, default= (1,1,1))
     
     my_enum : bpy.props.EnumProperty(
         name= "Base",
-        description= "sample text",
+        description= "Choose Which Carton Object to Generate",
         items= [('OP1', "Carton 3D Base", ""),
                 ('OP2', "Carton 2D Flat", "")                
         ]
     )
     my_enum_unit : bpy.props.EnumProperty(
         name= "Units",
-        description= "sample text",
+        description= "Set Scene to Metric/mm or Imperial/IN",
         items= [('UN1', "Millimeters mm", ""),
                 ('UN2', "Inches IN", "")
                 
