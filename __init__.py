@@ -23,7 +23,7 @@
 
 bl_info = {"name": "Carton Viz Helper",
            "author": "CDMJ",
-           "version": (3, 40, 0),
+           "version": (3, 41, 0),
            "blender": (3, 10, 0),
            "location": "Toolbar > Misc Tab > Carton Panel",
            "description": "Carton Previs Studio Tool",
@@ -37,14 +37,14 @@ from bpy_extras.object_utils import AddObjectHelper, object_data_add
 from mathutils import Vector
 
 
-class MyProperties(bpy.types.PropertyGroup):
+class MyCartonProperties(bpy.types.PropertyGroup):
     
-    my_string : bpy.props.StringProperty(name= "Product")
+    my_string : bpy.props.StringProperty(name= "Product", description = "Name for Generated Object and Collection")
     
-    my_float_vector : bpy.props.FloatVectorProperty(name= "Scale", soft_min= 0, soft_max= 1000, default= (1,1,1))
+    my_float_vector : bpy.props.FloatVectorProperty(name= "Scale", soft_min= 0, soft_max= 1000, default= (1,1,1), precision=16)
     
     my_enum : bpy.props.EnumProperty(
-        name= "Base",
+        name= "Add",
         description= "Choose Which Carton Object to Generate",
         items= [('OP1', "Carton 3D Base", ""),
                 ('OP2', "Carton 2D Flat", "")                
@@ -220,73 +220,73 @@ class CARTONVIZ_OT_my_op(bpy.types.Operator):
         
         if mytool.my_enum == 'OP1':
             bpy.ops.mesh.primitive_cube_add()
-            bpy.context.object.name = mytool.my_string
-            bpy.ops.object.move_to_collection(collection_index=0, is_new=True, new_collection_name=mytool.my_string)
-
-            ########### if statements for mm or IN
-            if mytool.my_enum_unit == 'UN1':
-                #then do this stuff
-                bpy.context.scene.unit_settings.system = 'METRIC'
-                bpy.context.scene.unit_settings.length_unit = 'MILLIMETERS'
             
-                ###new code
-                x = mytool.my_float_vector[0] * 0.001
-                y = mytool.my_float_vector[1] * 0.001
-                z = mytool.my_float_vector[2] * 0.001
-            
-                bpy.context.object.dimensions = [x,y,z]
-                
-            elif mytool.my_enum_unit == 'UN2':
-                #then do this instead
-                bpy.context.scene.unit_settings.system = 'IMPERIAL'
-                bpy.context.scene.unit_settings.length_unit = 'INCHES'
-                # 276 / 7.00 = 39.42857142857143
-                # 187 / 4.75 = 39.36842105263158
-                # 197 / 5.00 = 39.4
-                # 
-                ###new code
-                x = mytool.my_float_vector[0] / 39.38
-                y = mytool.my_float_vector[1] / 39.38
-                z = mytool.my_float_vector[2] / 39.38
-            
-                bpy.context.object.dimensions = [x,y,z]
-                
-
         if mytool.my_enum == 'OP2':
             #add plane to just above the image plane reference
             bpy.ops.mesh.primitive_plane_add(enter_editmode=False, align='WORLD', location=(0, 0, 0.002), scale=(1, 1, 1))
-            bpy.context.object.name = mytool.my_string
-            ########### if statements for mm or IN
-            if mytool.my_enum_unit == 'UN1':
-                #then do this stuff
-                bpy.context.scene.unit_settings.system = 'METRIC'
-                bpy.context.scene.unit_settings.length_unit = 'MILLIMETERS'
             
-                ###new code
-                x = mytool.my_float_vector[0] * 0.001
-                y = mytool.my_float_vector[1] * 0.001
-                z = mytool.my_float_vector[2] * 0.001
+        if mytool.my_enum_unit == 'UN1':
+        
+            bpy.context.object.name = mytool.my_string + " " +str(mytool.my_float_vector[0]) +"mm x" +str(mytool.my_float_vector[1]) +"mm x" +str(mytool.my_float_vector[2]) +"mm"
+        
+        elif mytool.my_enum_unit == 'UN2':
             
-                bpy.context.object.dimensions = [x,y,z]
+            bpy.context.object.name = mytool.my_string + " " +str(mytool.my_float_vector[0]) +"IN x" +str(mytool.my_float_vector[1]) +"IN x" +str(mytool.my_float_vector[2]) +"IN"
+
+
+
+        ########### if statements for mm or IN
+        if mytool.my_enum_unit == 'UN1':
+            #then do this stuff
+            bpy.context.scene.unit_settings.system = 'METRIC'
+            bpy.context.scene.unit_settings.length_unit = 'MILLIMETERS'
+        
+            ###new code
+            x = mytool.my_float_vector[0] * 0.001
+            y = mytool.my_float_vector[1] * 0.001
+            z = mytool.my_float_vector[2] * 0.001
+        
+            bpy.context.object.dimensions = [x,y,z]
+            
+        elif mytool.my_enum_unit == 'UN2':
+            #then do this instead
+            bpy.context.scene.unit_settings.system = 'IMPERIAL'
+            bpy.context.scene.unit_settings.length_unit = 'INCHES'
+            # 276 / 7.00 = 39.42857142857143
+            # 187 / 4.75 = 39.36842105263158
+            # 197 / 5.00 = 39.4
+            # 
+            ###new code
+            x = mytool.my_float_vector[0] / 39.38
+            y = mytool.my_float_vector[1] / 39.38
+            z = mytool.my_float_vector[2] / 39.38
+        
+            bpy.context.object.dimensions = [x,y,z]
                 
-            elif mytool.my_enum_unit == 'UN2':
-                #then do this instead
-                bpy.context.scene.unit_settings.system = 'IMPERIAL'
-                bpy.context.scene.unit_settings.length_unit = 'INCHES'
-                # 276 / 7.00 = 39.42857142857143
-                # 187 / 4.75 = 39.36842105263158
-                # 197 / 5.00 = 39.4
-                # 
-                ###new code
-                x = mytool.my_float_vector[0] / 39.38
-                y = mytool.my_float_vector[1] / 39.38
-                z = mytool.my_float_vector[2] / 39.38
-            
-                bpy.context.object.dimensions = [x,y,z]
+
+        bpy.ops.object.transform_apply(location=False, rotation=False, scale=True)
           
 
         return {'FINISHED'}
 
+
+class CARTONVIZ_OT_my_collection(bpy.types.Operator):
+    bl_label = "Add to Collection"
+    bl_idname = "cartonviz.my_collection"
+    bl_options = { 'REGISTER', 'UNDO' }
+    
+    @classmethod
+    def poll(cls, context):
+        return context.active_object is not None      
+    
+    def execute(self, context):
+        scene = context.scene
+        mytool = scene.my_tool
+        
+        bpy.context.selected_objects
+        bpy.ops.object.move_to_collection(collection_index=0, is_new=True, new_collection_name= mytool.my_string)
+        return {'FINISHED'}
+    
 ############################################## New Hotness End
 
 
@@ -958,7 +958,8 @@ class PANEL_PT_CartonPrimitives(bpy.types.Panel):
         row2.scale_x=0.50
         row2.scale_y=1.25
         row2.operator("image.cameraview_model", text = "DieCam", icon ="OUTLINER_OB_CAMERA")
-                
+        
+        col.label(text="Generate Carton Here")        
         row = layout.row()
         row = col.row(align=True)
         row.scale_x=0.50
@@ -970,7 +971,7 @@ class PANEL_PT_CartonPrimitives(bpy.types.Panel):
         row.scale_x=0.50
         row.scale_y = 1.25
         row2 = row.split(align=True)
-        row2.prop(mytool, "my_enum")
+        row.prop(mytool, "my_float_vector")
         row = layout.row()
         row = col.row(align=True)
         row.scale_x=1
@@ -982,13 +983,18 @@ class PANEL_PT_CartonPrimitives(bpy.types.Panel):
         row.scale_x=0.75
         row.scale_y = 1.25
         #row2 = row.split(align=True)
-        row.prop(mytool, "my_float_vector")#
+        row.prop(mytool, "my_enum")#
         row = layout.row()
         row = col.row(align=True)
         row.scale_x=0.75
         row.scale_y = 1.25
         row.operator("cartonviz.myop_operator", text = "Generate Carton", icon = 'MOD_EXPLODE')
-                
+        row = layout.row()
+        row = col.row(align=True)
+        row.scale_x=0.75
+        row.scale_y = 1.25
+        row.operator("cartonviz.my_collection", text = "Add to Collection", icon ='OUTLINER_COLLECTION')
+        col.label(text="Extras")        
         row = layout.row()
         row = col.row(align=True)
         row.scale_x=0.50
@@ -1001,7 +1007,7 @@ class PANEL_PT_CartonPrimitives(bpy.types.Panel):
         row = col.row(align=True)
         row.scale_x=0.50
         row.scale_y = 1.25
-        row = row.split(align=False)
+        #row = row.split(align=False)
         row.operator("object.center_mirror", text = "Add Mirror", icon = 'ORIENTATION_VIEW')
         row.operator("object.apply_xmirror", text = "XMirror", icon = 'MOD_MIRROR')
         
@@ -1137,7 +1143,7 @@ class PANEL_PT_CartonFinishing(bpy.types.Panel):
 
 
 classes = [
-    MyProperties,
+    MyCartonProperties,
     OBJECT_OT_front_mapping,
     OBJECT_OT_back_mapping,
     OBJECT_OT_top_mapping,
@@ -1146,6 +1152,7 @@ classes = [
     OBJECT_OT_right_mapping,
     OBJECT_OT_add_bevel,
     CARTONVIZ_OT_my_op,
+    CARTONVIZ_OT_my_collection,
     PANEL_PT_CartonPrimitives,
     PANEL_PT_CartonUVMapping,
     PANEL_PT_CartonFinishing,
@@ -1167,7 +1174,7 @@ def register():
     for cls in classes:
         bpy.utils.register_class(cls)
         
-        bpy.types.Scene.my_tool = bpy.props.PointerProperty(type= MyProperties)
+        bpy.types.Scene.my_tool = bpy.props.PointerProperty(type= MyCartonProperties)
  
 def unregister():
     for cls in classes:
