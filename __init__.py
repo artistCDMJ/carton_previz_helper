@@ -23,7 +23,7 @@ from mathutils import Vector
 #
 # ##### END GPL LICENSE BLOCK #####
 
-# <pep8 compliant>
+# NON <pep8 compliant>
 ###############################################################################
 
 bl_info = {"name": "Carton Viz Helper",
@@ -236,10 +236,22 @@ class CARTONVIZ_OT_my_op(bpy.types.Operator):
         return context.area.type == 'VIEW_3D'
 
     def execute(self, context):
+        scalable_objs = [
+            "primitive_cube_add",
+            "primitive_uv_sphere_add",
+            "primitive_cylinder_add",
+            "primitive_cone_add",
+        ]
         x, y, z = unit_conversion(context, Vector(self.item_dimensions))
-
-        cmd = f"bpy.ops.mesh.{self.item_type}(scale=({x}, {y}, {z}))"
-        ob = eval(cmd)
+        if self.item_type in scalable_objs:
+            cmd = f"bpy.ops.mesh.{self.item_type}(scale=({x}, {y}, {z}))"
+            ob = eval(cmd)
+        else:
+            cmd = f"bpy.ops.mesh.{self.item_type}()"
+            ob = eval(cmd)
+            ob = context.view_layer.objects.active
+            ob.dimensions = Vector((x, y, z)) * 2
+            bpy.ops.object.transform_apply(location=False, rotation=False, scale=True)
         context.view_layer.objects.active.name = self.item_name
         return {'FINISHED'}
 
