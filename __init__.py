@@ -175,16 +175,16 @@ class OBJECT_OT_right_mapping(bpy.types.Operator):
 
 
 class CARTONVIZ_PG_add_object_helper(bpy.types.PropertyGroup):
-    my_obj_name: bpy.props.StringProperty(
+    carton_obj_name: bpy.props.StringProperty(
         name="Name",
         description="Name for Generated Object and Collection",
     )
-    my_obj_name_flag: bpy.props.BoolProperty(
+    carton_obj_name_flag: bpy.props.BoolProperty(
         name="Include units",
         description="Add units to name",
         default=False,
     )
-    my_obj_dimensions: bpy.props.FloatVectorProperty(
+    carton_obj_dimensions: bpy.props.FloatVectorProperty(
         name="Dims",
         description="Dimensions at unit scale",
         soft_min=0,
@@ -192,7 +192,7 @@ class CARTONVIZ_PG_add_object_helper(bpy.types.PropertyGroup):
         default=(1, 1, 1),
         precision=16,
     )
-    my_enum_objs: bpy.props.EnumProperty(
+    carton_enum_objs: bpy.props.EnumProperty(
         name="Add",
         description="Primitives to Add",
         items=[
@@ -200,7 +200,7 @@ class CARTONVIZ_PG_add_object_helper(bpy.types.PropertyGroup):
             ("MESH_CUBE", "Cube", "primitive_cube_add")
         ],
     )
-    my_enum_unit: bpy.props.EnumProperty(
+    carton_enum_unit: bpy.props.EnumProperty(
         name="Units",
         description="Measurements for Use in Scene and Object",
         items=[
@@ -911,40 +911,40 @@ class CARTONVIZ_PT_main_panel(bpy.types.Panel):
                       icon="OUTLINER_OB_CAMERA")
 
         col = layout.column()
-        col.prop(mytool, "my_enum_unit")
+        col.prop(mytool, "carton_enum_unit")
         row = layout.row()
-        row.prop(mytool, "my_obj_dimensions")
+        row.prop(mytool, "carton_obj_dimensions")
         row = layout.row()
-        row.prop(mytool, "my_obj_name")
-        row.prop(mytool, "my_obj_name_flag")
+        row.prop(mytool, "carton_obj_name")
+        row.prop(mytool, "carton_obj_name_flag")
         col = layout.column()
-        if not mytool.my_obj_name_flag:
-            obj_name = mytool.my_obj_name
+        if not mytool.carton_obj_name_flag:
+            obj_name = mytool.carton_obj_name
         else:
             s = Template(
                 "${obj_name} ${x_dim} ${unit} x ${y_dim}\
                  ${unit} x ${z_dim} ${unit}"
             )
-            if mytool.my_enum_unit == "UN1":
+            if mytool.carton_enum_unit == "UN1":
                 obj_name = s.substitute(
-                    obj_name=mytool.my_obj_name,
-                    x_dim=mytool.my_obj_dimensions[0],
+                    obj_name=mytool.carton_obj_name,
+                    x_dim=mytool.carton_obj_dimensions[0],
                     unit="mm",
-                    y_dim=mytool.my_obj_dimensions[1],
-                    z_dim=mytool.my_obj_dimensions[2])
+                    y_dim=mytool.carton_obj_dimensions[1],
+                    z_dim=mytool.carton_obj_dimensions[2])
             else:
                 obj_name = s.substitute(
-                    obj_name=mytool.my_obj_name,
-                    x_dim=mytool.my_obj_dimensions[0],
+                    obj_name=mytool.carton_obj_name,
+                    x_dim=mytool.carton_obj_dimensions[0],
                     unit="IN",
-                    y_dim=mytool.my_obj_dimensions[1],
-                    z_dim=mytool.my_obj_dimensions[2])
+                    y_dim=mytool.carton_obj_dimensions[1],
+                    z_dim=mytool.carton_obj_dimensions[2])
         col.label(text=f"ex: {obj_name}")
-        items = mytool.bl_rna.properties['my_enum_objs'].enum_items
-        enum = items[mytool.my_enum_objs]
+        items = mytool.bl_rna.properties['carton_enum_objs'].enum_items
+        enum = items[mytool.carton_enum_objs]
         col.prop(
             mytool,
-            "my_enum_objs",
+            "carton_enum_objs",
             text="Object type",
             icon=enum.identifier)
 
@@ -954,7 +954,7 @@ class CARTONVIZ_PT_main_panel(bpy.types.Panel):
             icon=enum.identifier)
         make_obj.item_type = enum.description
 
-        make_obj.item_dimensions = mytool.my_obj_dimensions
+        make_obj.item_dimensions = mytool.carton_obj_dimensions
         make_obj.item_name = obj_name
 
         make_coll = col.operator("cartonviz.my_collection")
@@ -1001,11 +1001,11 @@ def unit_conversion(context, item_dims):
     # in the enumerator property
 
     # metric to mm conversions (1m = 1000mm)
-    if mytool.my_enum_unit == 'UN1':
+    if mytool.carton_enum_unit == 'UN1':
         item_dims = item_dims / 1000
 
     # imperial to IN conversions (1m = 39.36in)
-    if mytool.my_enum_unit == 'UN2':
+    if mytool.carton_enum_unit == 'UN2':
         item_dims = item_dims / 39.36
     return item_dims
 
