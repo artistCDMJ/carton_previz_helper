@@ -28,13 +28,47 @@ from mathutils import Vector
 
 bl_info = {"name": "Carton Viz Helper",
            "author": "CDMJ",
-           "version": (3, 42, 0),
+           "version": (3, 43, 0),
            "blender": (3, 10, 0),
            "location": "Toolbar > Misc Tab > Carton Viz helper",
-           "description": "Carton Previs Studio Tool",
+           "description": "CDMJ IN House Carton Previz Helper Tool",
            "warning": "",
            "category": "Object"}
 
+
+
+
+################## add Scene Unit Choice
+
+    
+class SCENE_OT_scene_unit(bpy.types.Operator):
+    """Toggle Metric or Imperial"""
+    bl_idname = "scene.scene_unit"
+    bl_label = "Toggle Unit"
+    bl_options = { 'REGISTER', 'UNDO' }
+    
+    @classmethod
+    def poll(cls, context):
+        return context.active_object is not None
+
+    def execute(self, context):
+
+        scene = context.scene
+
+
+        #new code
+
+        if bpy.context.scene.unit_settings.system == 'METRIC':
+            bpy.context.scene.unit_settings.system = 'IMPERIAL'
+        elif bpy.context.scene.unit_settings.system == 'IMPERIAL':
+            bpy.context.scene.unit_settings.system = 'METRIC'
+            
+        else:
+            bpy.context.scene.unit_settings.system = 'METRIC'
+
+        return {'FINISHED'}
+    
+###################################### need to rewrite for toggle on single button :D
 
 class OBJECT_OT_front_mapping(bpy.types.Operator):
     """Project selected face to UV Map in UV Editor using Shift \
@@ -422,13 +456,13 @@ class SCENE_OT_scene_pivot(bpy.types.Operator):
     def execute(self, context):
         scene = context.scene
 
-        pivot = bpy.context.scene.tool_settings.transform_pivot_point
-        if pivot == 'MEDIAN_POINT':
-            pivot = 'CURSOR'
-        elif pivot == 'CURSOR':
-            pivot = 'MEDIAN_POINT'
+        #pivot = bpy.context.scene.tool_settings.transform_pivot_point
+        if bpy.context.scene.tool_settings.transform_pivot_point == 'MEDIAN_POINT':
+            bpy.context.scene.tool_settings.transform_pivot_point = 'CURSOR'
+        elif bpy.context.scene.tool_settings.transform_pivot_point == 'CURSOR':
+            bpy.context.scene.tool_settings.transform_pivot_point = 'MEDIAN_POINT'
         else:
-            pivot = 'CURSOR'
+            bpy.context.scene.tool_settings.transform_pivot_point = 'CURSOR'
 
         return {'FINISHED'}
 
@@ -563,6 +597,16 @@ class OBJECT_OT_Cameraview_model(bpy.types.Operator):
         bpy.ops.object.select_all(action='DESELECT')
         ob = bpy.data.objects["ref_dieline_proxy"]
         bpy.context.view_layer.objects.active = ob
+        
+        ###########   MUST USE FLAT AND TEXTURED VIEW
+        bpy.context.space_data.shading.type = 'SOLID'
+        bpy.context.space_data.shading.light = 'FLAT'
+        bpy.context.space_data.shading.color_type = 'TEXTURE'
+
+        
+
+
+        
 
         return {'FINISHED'}
 
@@ -896,6 +940,7 @@ class CARTONVIZ_PT_main_panel(bpy.types.Panel):
         col = box.column(align=True)
         col.label(text="Carton Building Starts Here")
         row = col.row(align=True)
+        
 
         row1 = row.split(align=True)
         row1.scale_x = 0.50
@@ -909,6 +954,26 @@ class CARTONVIZ_PT_main_panel(bpy.types.Panel):
         row2.operator("image.cameraview_model",
                       text="DieCam",
                       icon="OUTLINER_OB_CAMERA")
+        row = col.row(align=True)
+        row3 = row.split(align=True)
+        row3.scale_x = 0.50
+        row3.scale_y = 1.25
+        
+        scunit = bpy.context.scene.unit_settings.system
+        
+        if scunit == 'METRIC':
+            toggle = "Status is Metric"
+            scicon = "URL"
+        elif scunit == 'IMPERIAL':
+            toggle = "Status is Imperial"
+            scicon = "HOOK"
+
+        
+        row3.operator("scene.scene_unit",
+                      text=toggle,
+                      icon=scicon)
+        
+        
 
         col = layout.column()
         col.prop(mytool, "carton_enum_unit")
@@ -1141,6 +1206,7 @@ classes = [
     CARTONVIZ_PT_main_panel,
     CARTONVIZ_OT_my_op,
     CARTONVIZ_OT_my_collection,
+    SCENE_OT_scene_unit,
     OBJECT_OT_front_mapping,
     OBJECT_OT_back_mapping,
     OBJECT_OT_top_mapping,
@@ -1161,6 +1227,7 @@ classes = [
     CARTONVIZ_OT_add_basic,
     CARTONVIZ_OT_add_fiberboard,
     CARTONVIZ_OT_add_corrugate
+    
 ]
 
 
