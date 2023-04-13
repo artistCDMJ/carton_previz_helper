@@ -28,12 +28,81 @@ from mathutils import Vector
 
 bl_info = {"name": "Carton Viz Helper",
            "author": "CDMJ",
-           "version": (3, 43, 0),
+           "version": (3, 44, 0),
            "blender": (3, 10, 0),
            "location": "Toolbar > Misc Tab > Carton Viz helper",
            "description": "CDMJ IN House Carton Previz Helper Tool",
            "warning": "",
            "category": "Object"}
+
+
+
+##################### RENDER PREVIEW AND FINAL RENDER SETTINGS MACROS
+class SCENE_OT_preview_render(bpy.types.Operator):
+    """preview render of scene camera for carton"""
+    bl_idname = "scene.preview_render"
+    bl_label = "Preview Render"
+    bl_options = { 'REGISTER', 'UNDO' }
+    
+    @classmethod
+    def poll(cls, context):
+        return context.active_object is not None
+
+    def execute(self, context):
+
+        scene = context.scene
+
+
+        #new code
+        bpy.context.scene.render.resolution_x = 1024
+        bpy.context.scene.render.resolution_y = 1024
+        bpy.context.scene.render.resolution_percentage = 50
+        
+
+        bpy.context.scene.render.engine = 'CYCLES'
+        bpy.context.scene.cycles.preview_samples = 32
+        bpy.context.scene.cycles.samples = 128
+        bpy.context.scene.cycles.use_denoising = True
+        bpy.context.scene.render.film_transparent = True
+        bpy.context.scene.view_settings.look = 'High Contrast'
+        
+        
+
+        return {'FINISHED'}
+
+class SCENE_OT_full_render(bpy.types.Operator):
+    """full render of scene camera for carton"""
+    bl_idname = "scene.full_render"
+    bl_label = "Full Render"
+    bl_options = { 'REGISTER', 'UNDO' }
+    
+    @classmethod
+    def poll(cls, context):
+        return context.active_object is not None
+
+    def execute(self, context):
+
+        scene = context.scene
+
+
+        #new code
+        bpy.context.scene.render.resolution_x = 1024
+        bpy.context.scene.render.resolution_y = 1024
+        bpy.context.scene.render.resolution_percentage = 200
+        
+
+        bpy.context.scene.render.engine = 'CYCLES'
+        bpy.context.scene.cycles.preview_samples = 32
+        bpy.context.scene.cycles.samples = 128
+        bpy.context.scene.cycles.use_denoising = True
+        bpy.context.scene.render.film_transparent = True
+        bpy.context.scene.view_settings.look = 'High Contrast'
+        
+        
+
+        return {'FINISHED'}
+
+
 
 
 
@@ -363,7 +432,7 @@ class OBJECT_OT_wire_draw(bpy.types.Operator):
 
 
 class OBJECT_OT_center_mirror(bpy.types.Operator):
-    """Center Origin to Selection and add \
+    """Center Origin to Selection and add\
     Mirror Modifier for construct of Carton Flat"""
     bl_idname = "object.center_mirror"
     bl_label = "Center and Add Mirror"
@@ -379,6 +448,8 @@ class OBJECT_OT_center_mirror(bpy.types.Operator):
         bpy.ops.object.origin_set(type='ORIGIN_CURSOR', center='MEDIAN')
         bpy.ops.object.editmode_toggle()
         bpy.ops.object.modifier_add(type='MIRROR')
+        bpy.context.object.modifiers["Mirror"].use_clip = True
+        
         return {'FINISHED'}
 
 
@@ -962,10 +1033,10 @@ class CARTONVIZ_PT_main_panel(bpy.types.Panel):
         scunit = bpy.context.scene.unit_settings.system
         
         if scunit == 'METRIC':
-            toggle = "Status is Metric"
+            toggle = "Scene is Metric"
             scicon = "URL"
         elif scunit == 'IMPERIAL':
-            toggle = "Status is Imperial"
+            toggle = "Scene is Imperial"
             scicon = "HOOK"
 
         
@@ -1036,9 +1107,18 @@ class CARTONVIZ_PT_main_panel(bpy.types.Panel):
         row3.operator("object.wire_draw",
                       text="Wire",
                       icon='MOD_SOLIDIFY')
+                      
+        if bpy.context.scene.tool_settings.transform_pivot_point == 'CURSOR':
+            pivot = 'PIVOT_CURSOR'
+        elif bpy.context.scene.tool_settings.transform_pivot_point == 'MEDIAN_POINT':
+            pivot = 'PIVOT_MEDIAN'
+        else:
+            pivot='ERROR'
+
+
         row3.operator("scene.pivot",
-                      text="Toggle Pivot",
-                      icon='PIVOT_CURSOR')
+                      text="Pivot",
+                      icon=pivot)
 
         row = layout.row()
         row = col.row(align=True)
@@ -1196,9 +1276,19 @@ class CARTONVIZ_PT_CartonFinishing(bpy.types.Panel):
         row2 = row.split(align=True)
         row2.scale_x = 0.50
         row2.scale_y = 1.25
-        row2.operator("render.render",
-                      text="Render",
-                      icon='OUTLINER_OB_IMAGE')
+        row2.operator("scene.preview_render",
+                      text="Preview Snap",
+                      icon='SCENE')
+        row2.operator("scene.full_render",
+                      text="Full Shot",
+                      icon='OUTPUT')
+        row = layout.row()
+        row3 = row.split(align=True)
+        row3.scale_x = 0.50
+        row3.scale_y = 1.25
+        row3.operator("render.render",
+                      text="Render Shot",
+                      icon='WORKSPACE')
 
 
 classes = [
@@ -1226,7 +1316,9 @@ classes = [
     OBJECT_OT_cardboard,
     CARTONVIZ_OT_add_basic,
     CARTONVIZ_OT_add_fiberboard,
-    CARTONVIZ_OT_add_corrugate
+    CARTONVIZ_OT_add_corrugate,
+    SCENE_OT_preview_render,
+    SCENE_OT_full_render
     
 ]
 
