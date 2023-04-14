@@ -6,7 +6,7 @@ Carton PreViz Helper addon
 Carton Building
 
 "Load Dieline" - load the dieline image as a plane into the 3d view, preferably top down.
-"DieCam" - adds a Camera View to work through for UV Mapping and modeling purposes
+"DieCam" - adds a Camera View to work through for UV Mapping and modeling purposes.
 "Scene is ___ (toggle)" - Press to set the Scene units to Metric or Imperial depending on your project dieline measurements.
 "Units", "Dims","Name", Include Units(toggle)" - set your object dimensions and name for your model, including dimensions if desired.
 This is even more for your Domain object for rescale after model is done and folded.
@@ -16,7 +16,7 @@ Press the action button to create the object at cursor.
 "Add to Collection" - this creates a Collection from the anme of the object and puts it inside the collection.
 
 Extras for Modeling
-"Wire" - toggles selected object to Wireframe or Textured Solid in the 3d view for working with Domain object
+"Wire" - toggles selected object to Wireframe or Textured Solid in the 3d view for working with Domain object.
 "Pivot(toggle)" - press to toggle between Mdeian Point or Cursor as pivot, and if neither is selected it will display an error icon
 "Add Mirror" - in edit mode with the center edge loop selected and the negative axis deleted, this snaps the Origina of the objec to the selection and sets a Mirror modifier.
 "XMirror" - in Object Mode, this applies the previous Mirror Modifier, assigns Empty Vertex Groups for the manual Folding, and turns on XMirror for symmetrical movement
