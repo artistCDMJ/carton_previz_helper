@@ -28,10 +28,10 @@ from mathutils import Vector
 
 bl_info = {"name": "Carton Viz Helper",
            "author": "CDMJ",
-           "version": (3, 44, 0),
-           "blender": (3, 10, 0),
+           "version": (3, 45, 0),
+           "blender": (3, 31, 0),
            "location": "Toolbar > Misc Tab > Carton Viz helper",
-           "description": "CDMJ IN House Carton Previz Helper Tool",
+           "description": "CDMJ In-House Carton Previz Helper Tool",
            "warning": "",
            "category": "Object"}
 
@@ -39,7 +39,7 @@ bl_info = {"name": "Carton Viz Helper",
 
 ##################### RENDER PREVIEW AND FINAL RENDER SETTINGS MACROS
 class SCENE_OT_preview_render(bpy.types.Operator):
-    """preview render of scene camera for carton"""
+    """preview render scene settings convenience"""
     bl_idname = "scene.preview_render"
     bl_label = "Preview Render"
     bl_options = { 'REGISTER', 'UNDO' }
@@ -71,7 +71,7 @@ class SCENE_OT_preview_render(bpy.types.Operator):
         return {'FINISHED'}
 
 class SCENE_OT_full_render(bpy.types.Operator):
-    """full render of scene camera for carton"""
+    """full render scene settings convenience"""
     bl_idname = "scene.full_render"
     bl_label = "Full Render"
     bl_options = { 'REGISTER', 'UNDO' }
@@ -683,8 +683,11 @@ class OBJECT_OT_Cameraview_model(bpy.types.Operator):
 
 
 class CARTONVIZ_OT_add_basic(bpy.types.Operator):
-    bl_label = "Carton Shader Base"
+    """Add Full Carton Base Shader Node Group to Selected Carton"""
     bl_idname = "cartonviz.addbasic_operator"
+    bl_label = "Carton Shader Base"
+    bl_options = { 'REGISTER', 'UNDO' }
+    
 
     @classmethod
     def poll(self, context):
@@ -781,8 +784,10 @@ class CARTONVIZ_OT_add_basic(bpy.types.Operator):
 
 
 class CARTONVIZ_OT_add_fiberboard(bpy.types.Operator):
-    bl_label = "Carton Fiberboard Shader"
+    """Applies a Procedural Fiberboard Texture to Solidy Surface"""    
     bl_idname = "cartonviz.add_fiberboard"
+    bl_label = "Carton Fiberboard Shader"
+    bl_options = { 'REGISTER', 'UNDO'}
 
     @classmethod
     def poll(self, context):
@@ -898,8 +903,10 @@ class CARTONVIZ_OT_add_fiberboard(bpy.types.Operator):
 
 
 class CARTONVIZ_OT_add_corrugate(bpy.types.Operator):
-    bl_label = "Corrugate Shader"
+    """Applies a Procedural Corrugate Texture to Solidify Surface"""
     bl_idname = "cartonviz.add_corrugate"
+    bl_label = "Corrugate Shader"    
+    bl_options = { 'REGISTER', 'UNDO'}
 
     @classmethod
     def poll(self, context):
@@ -1276,12 +1283,25 @@ class CARTONVIZ_PT_CartonFinishing(bpy.types.Panel):
         row2 = row.split(align=True)
         row2.scale_x = 0.50
         row2.scale_y = 1.25
-        row2.operator("scene.preview_render",
-                      text="Preview Snap",
-                      icon='SCENE')
-        row2.operator("scene.full_render",
-                      text="Full Shot",
+        
+
+        renpercent = bpy.context.scene.render.resolution_percentage
+        if renpercent == 50:
+            row2.operator("scene.full_render",
+                      text="Set Full Shot",
                       icon='OUTPUT')
+        elif renpercent == 200:
+            row2.operator("scene.preview_render",
+                      text="Set Preview Snap",
+                      icon='SCENE')
+        else:
+            row2.operator("scene.full_render",
+                      text="Set Full Shot",
+                      icon='OUTPUT')
+            
+            
+        
+        
         row = layout.row()
         row3 = row.split(align=True)
         row3.scale_x = 0.50
