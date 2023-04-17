@@ -356,6 +356,8 @@ class CARTONVIZ_OT_my_op(bpy.types.Operator):
             ob.dimensions = Vector((x, y, z)) * 2
             bpy.ops.object.transform_apply(location=False, rotation=False, scale=True)
         context.view_layer.objects.active.name = self.item_name
+        bpy.ops.transform.translate(value=(0, 0, 4.68563e-05))
+
         return {'FINISHED'}
 
 
@@ -454,7 +456,7 @@ class OBJECT_OT_center_mirror(bpy.types.Operator):
 
 
 class OBJECT_OT_apply_xmirror(bpy.types.Operator):
-    """Apply Mirror Modifier and Set X Mirror and Empty Vertex Groups"""
+    """Apply Mirror Modifier and Set X Mirror and Empty Vertex Groups plus two Shape Keys for Fold Work"""
     bl_idname = "object.apply_xmirror"
     bl_label = "Xmirror ApplyMods"
     bl_options = {'REGISTER', 'UNDO'}
@@ -477,6 +479,17 @@ class OBJECT_OT_apply_xmirror(bpy.types.Operator):
         bpy.context.active_object.vertex_groups.new(name='_top_')
         bpy.context.active_object.vertex_groups.new(name='_front_')
         bpy.context.active_object.vertex_groups.new(name='_bottom_')
+        
+        ########### experimental break to shape key storage of flat and fold
+        context = bpy.context
+        obj = context.object
+
+        sk_flat = obj.shape_key_add(name='FLAT CARTON', from_mix=False)
+
+        obj.data.shape_keys.use_relative = True
+
+        sk_fold = obj.shape_key_add(name='FOLDED', from_mix = False)
+
 
         return {'FINISHED'}
 
