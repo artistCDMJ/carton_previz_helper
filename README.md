@@ -67,5 +67,9 @@ Carton Finishing Tools
 
 "Render Shot" - convenient location for render at current settings that doesn't require traveling up to the window menus or reaching for F12 key.
 
+"Set Pose Frames" - introduces an Empty into the scene while setting the frame range to 5 frames, and setting a pose keyframe for the Empty on each frame.
+
+"Render Frames" - performs a PlayBlast render of all 5 frmaes to the tmp folder using the current carton name as image name prefix.
+
 
 
