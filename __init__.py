@@ -28,25 +28,109 @@ from mathutils import Vector
 
 bl_info = {"name": "Carton Viz Helper",
            "author": "CDMJ",
-           "version": (3, 45, 0),
+           "version": (3, 46, 0),
            "blender": (3, 31, 0),
            "location": "Toolbar > Misc Tab > Carton Viz helper",
            "description": "CDMJ In-House Carton Previz Helper Tool",
            "warning": "",
            "category": "Object"}
 
+########################## Extra Hot Mess 
 
+class SCENE_OT_pose_frames(bpy.types.Operator):
+    """Set up empty and keyframes over 5 frames for posing to camera"""
+    bl_idname = "scene.pose_frames"
+    bl_label = "Set Pose Frames"
+    bl_options = { 'REGISTER', 'UNDO' }
+    
+
+    def execute(self, context):
+
+        scene = context.scene
+
+
+        #new code
+        ################# Empty And Key Frames for Poses in 5 Frames
+        bpy.ops.object.empty_add(type='PLAIN_AXES', align='WORLD', location=(0, 0, 0), scale=(1, 1, 1))
+        bpy.context.object.name = "Key Pose"
+        bpy.context.object.empty_display_size = 5
+
+        bpy.context.scene.frame_current = 1
+
+        bpy.ops.anim.keyframe_insert_by_name(type="BUILTIN_KSI_LocRot")
+
+        bpy.context.scene.frame_current = 2
+        bpy.ops.transform.rotate(value=-0.785398, orient_axis='Z', orient_type='GLOBAL', orient_matrix=((1, 0, 0), (0, 1, 0), (0, 0, 1)), orient_matrix_type='GLOBAL', constraint_axis=(False, False, True), mirror=False, use_proportional_edit=False, proportional_edit_falloff='SMOOTH', proportional_size=1, use_proportional_connected=False, use_proportional_projected=False, snap=False, snap_elements={'INCREMENT'}, use_snap_project=False, snap_target='CLOSEST', use_snap_self=False, use_snap_edit=False, use_snap_nonedit=False, use_snap_selectable=False)
+
+
+        bpy.ops.anim.keyframe_insert_by_name(type="BUILTIN_KSI_LocRot")
+
+        #bpy.ops.object.rotation_clear(clear_delta=False)
+
+        bpy.context.scene.frame_current = 3
+
+        bpy.ops.transform.rotate(value=1.5708, orient_axis='Z', orient_type='GLOBAL', orient_matrix=((1, 0, 0), (0, 1, 0), (0, 0, 1)), orient_matrix_type='GLOBAL', constraint_axis=(False, False, True), mirror=False, use_proportional_edit=False, proportional_edit_falloff='SMOOTH', proportional_size=1, use_proportional_connected=False, use_proportional_projected=False, snap=False, snap_elements={'INCREMENT'}, use_snap_project=False, snap_target='CLOSEST', use_snap_self=False, use_snap_edit=False, use_snap_nonedit=False, use_snap_selectable=False)
+
+        bpy.ops.anim.keyframe_insert_by_name(type="BUILTIN_KSI_LocRot")
+
+
+
+        bpy.context.scene.frame_current = 4
+
+        bpy.ops.object.rotation_clear(clear_delta=False)
+        bpy.ops.transform.rotate(value=1.5708, orient_axis='X', orient_type='GLOBAL', orient_matrix=((1, 0, 0), (0, 1, 0), (0, 0, 1)), orient_matrix_type='GLOBAL', constraint_axis=(True, False, False), mirror=False, use_proportional_edit=False, proportional_edit_falloff='SMOOTH', proportional_size=1, use_proportional_connected=False, use_proportional_projected=False, snap=False, snap_elements={'INCREMENT'}, use_snap_project=False, snap_target='CLOSEST', use_snap_self=False, use_snap_edit=False, use_snap_nonedit=False, use_snap_selectable=False)
+
+        bpy.ops.anim.keyframe_insert_by_name(type="BUILTIN_KSI_LocRot")
+
+
+        #bpy.ops.object.rotation_clear(clear_delta=False)
+
+        bpy.context.scene.frame_current = 5
+
+        bpy.ops.transform.rotate(value=3.14159, orient_axis='X', orient_type='GLOBAL', orient_matrix=((1, 0, 0), (0, 1, 0), (0, 0, 1)), orient_matrix_type='GLOBAL', constraint_axis=(True, False, False), mirror=False, use_proportional_edit=False, proportional_edit_falloff='SMOOTH', proportional_size=1, use_proportional_connected=False, use_proportional_projected=False, snap=False, snap_elements={'INCREMENT'}, use_snap_project=False, snap_target='CLOSEST', use_snap_self=False, use_snap_edit=False, use_snap_nonedit=False, use_snap_selectable=False)
+
+
+        bpy.ops.anim.keyframe_insert_by_name(type="BUILTIN_KSI_LocRot")
+
+        bpy.context.scene.frame_current = 1
+        
+        bpy.context.scene.frame_end = 5
+
+        ##########################end new code 5 frames
+        
+        return {'FINISHED'}
 
 ##################### RENDER PREVIEW AND FINAL RENDER SETTINGS MACROS
+class SCENE_OT_playblast_fullrender(bpy.types.Operator):
+    """Set output name and render all five frames to TMP folder"""
+    bl_idname = "scene.playblast_fullrender"
+    bl_label = "Playblast Full Render"
+    bl_options = { 'REGISTER', 'UNDO' }
+    
+
+    def execute(self, context):
+        scene = context.scene
+        mytool = scene.my_tool
+        context.selected_objects
+        
+        name = mytool.carton_obj_name
+       
+        bpy.context.scene.render.filepath = "/tmp\\" + name
+
+        bpy.ops.render.render(animation=True, use_viewport=True)
+        
+        
+
+        return {'FINISHED'}
+
+
+
 class SCENE_OT_preview_render(bpy.types.Operator):
     """preview render scene settings convenience"""
     bl_idname = "scene.preview_render"
     bl_label = "Preview Render"
     bl_options = { 'REGISTER', 'UNDO' }
     
-    @classmethod
-    def poll(cls, context):
-        return context.active_object is not None
 
     def execute(self, context):
 
@@ -76,9 +160,6 @@ class SCENE_OT_full_render(bpy.types.Operator):
     bl_label = "Full Render"
     bl_options = { 'REGISTER', 'UNDO' }
     
-    @classmethod
-    def poll(cls, context):
-        return context.active_object is not None
 
     def execute(self, context):
 
@@ -1311,8 +1392,14 @@ class CARTONVIZ_PT_CartonFinishing(bpy.types.Panel):
             row2.operator("scene.full_render",
                       text="Set Full Shot",
                       icon='OUTPUT')
-            
-            
+        
+        row = layout.row()
+        row2 = row.split(align=True)
+        row2.scale_x = 0.50
+        row2.scale_y = 1.25   
+        row2.operator("scene.pose_frames", 
+                        text="Set Pose Frames",
+                        icon='ARMATURE_DATA')    
         
         
         row = layout.row()
@@ -1322,6 +1409,9 @@ class CARTONVIZ_PT_CartonFinishing(bpy.types.Panel):
         row3.operator("render.render",
                       text="Render Shot",
                       icon='WORKSPACE')
+        row3.operator("scene.playblast_fullrender",
+                      text="Render Frames",
+                      icon='RENDER_ANIMATION')
 
 
 classes = [
@@ -1351,7 +1441,9 @@ classes = [
     CARTONVIZ_OT_add_fiberboard,
     CARTONVIZ_OT_add_corrugate,
     SCENE_OT_preview_render,
-    SCENE_OT_full_render
+    SCENE_OT_full_render,
+    SCENE_OT_pose_frames,
+    SCENE_OT_playblast_fullrender
     
 ]
 
