@@ -28,7 +28,7 @@ from mathutils import Vector
 
 bl_info = {"name": "Carton Viz Helper",
            "author": "CDMJ",
-           "version": (3, 46, 0),
+           "version": (3, 47, 0),
            "blender": (3, 31, 0),
            "location": "Toolbar > Misc Tab > Carton Viz helper",
            "description": "CDMJ In-House Carton Previz Helper Tool",
@@ -43,6 +43,9 @@ class SCENE_OT_pose_frames(bpy.types.Operator):
     bl_label = "Set Pose Frames"
     bl_options = { 'REGISTER', 'UNDO' }
     
+#    @classmethod
+#    def poll(cls, context):
+#        return context.active_object is not None
 
     def execute(self, context):
 
@@ -99,6 +102,40 @@ class SCENE_OT_pose_frames(bpy.types.Operator):
         ##########################end new code 5 frames
         
         return {'FINISHED'}
+##################### RENDER PREVIEW AND FINAL RENDER SETTINGS MACROS
+class SCENE_OT_camera_targetrender(bpy.types.Operator):
+    """Set New Camera Target Render System for Output of Poses"""
+    bl_idname = "scene.camera_targetrender"
+    bl_label = "Camera Target Render"
+    bl_options = { 'REGISTER', 'UNDO' }
+
+
+    def execute(self, context):
+        #add new camera target empty
+
+        bpy.ops.object.empty_add(type='SPHERE', 
+                    align='WORLD', 
+                    location=(0, 0, 0), 
+                    scale=(1, 1, 1))
+        ctarget = bpy.context.object
+        ctarget.name = "Camera Target"
+
+        #add new camera to scene make it track the target empty
+        bpy.ops.object.camera_add(enter_editmode=False, align='WORLD', 
+                    location=(0, -3.78, 1.75), 
+                    rotation=(1.12574, 0, 0), 
+                    scale=(1, 1, 1))
+        my_cam = bpy.context.object
+        bpy.context.scene.camera = my_cam
+        bpy.context.object.name = "Camera Target Render"
+        bpy.context.object.data.show_composition_thirds = True
+
+        bpy.ops.object.constraint_add(type='TRACK_TO')
+        bpy.context.object.constraints["Track To"].target = ctarget    
+            
+            
+
+        return {'FINISHED'}
 
 ##################### RENDER PREVIEW AND FINAL RENDER SETTINGS MACROS
 class SCENE_OT_playblast_fullrender(bpy.types.Operator):
@@ -107,6 +144,9 @@ class SCENE_OT_playblast_fullrender(bpy.types.Operator):
     bl_label = "Playblast Full Render"
     bl_options = { 'REGISTER', 'UNDO' }
     
+#    @classmethod
+#    def poll(cls, context):
+#        return context.active_object is not None
 
     def execute(self, context):
         scene = context.scene
@@ -131,6 +171,9 @@ class SCENE_OT_preview_render(bpy.types.Operator):
     bl_label = "Preview Render"
     bl_options = { 'REGISTER', 'UNDO' }
     
+#    @classmethod
+#    def poll(cls, context):
+#        return context.active_object is not None
 
     def execute(self, context):
 
@@ -160,6 +203,9 @@ class SCENE_OT_full_render(bpy.types.Operator):
     bl_label = "Full Render"
     bl_options = { 'REGISTER', 'UNDO' }
     
+#    @classmethod
+#    def poll(cls, context):
+#        return context.active_object is not None
 
     def execute(self, context):
 
@@ -1373,45 +1419,72 @@ class CARTONVIZ_PT_CartonFinishing(bpy.types.Panel):
                       text="Corrugate",
                       icon='ALIGN_JUSTIFY')
 
-        row = layout.row()
-        row2 = row.split(align=True)
-        row2.scale_x = 0.50
-        row2.scale_y = 1.25
+        
+
+class CARTONVIZ_PT_SceneRendering(bpy.types.Panel):
+    """Carton Rendering Tools"""
+    bl_label = "Carton Rendering Tools"
+    bl_idname = "cartonviz_PT_CartonRendering"
+    bl_space_type = "VIEW_3D"
+    bl_region_type = "UI"
+    bl_category = "Carton Viz Helper"
+    bl_options = {'DEFAULT_CLOSED'}
+
+    def draw(self, context):
+        layout = self.layout
+        obj = context.object
+
+        box = layout.box()  # big buttons aligned
+        col = box.column(align=True)
+        col.label(text='Magic Render Buttons ;)')
+
+        row = col.row(align=True)
+
+        row1 = row.split(align=True)
+        row1.scale_x = 0.50
+        row1.scale_y = 1.25
         
 
         renpercent = bpy.context.scene.render.resolution_percentage
         if renpercent == 50:
-            row2.operator("scene.full_render",
+            row1.operator("scene.full_render",
                       text="Set Full Shot",
                       icon='OUTPUT')
         elif renpercent == 200:
-            row2.operator("scene.preview_render",
+            row1.operator("scene.preview_render",
                       text="Set Preview Snap",
                       icon='SCENE')
         else:
-            row2.operator("scene.full_render",
+            row1.operator("scene.full_render",
                       text="Set Full Shot",
                       icon='OUTPUT')
         
+        row = col.row(align=True)
         row = layout.row()
-        row2 = row.split(align=True)
-        row2.scale_x = 0.50
-        row2.scale_y = 1.25   
+        row = col.row(align=True)
+        row.scale_x = 0.50
+        row.scale_y = 1.25
+        row2 = row.split(align=True)   
         row2.operator("scene.pose_frames", 
                         text="Set Pose Frames",
-                        icon='ARMATURE_DATA')    
-        
-        
+                        icon='ARMATURE_DATA')
+        row2.operator("scene.camera_targetrender", 
+                        text="Set Camera & Target",
+                        icon='RESTRICT_RENDER_OFF')
+                            
+        row = col.row(align=True)
         row = layout.row()
+        row = col.row(align=True)
+        row.scale_x = 0.50
+        row.scale_y = 1.25
         row3 = row.split(align=True)
-        row3.scale_x = 0.50
-        row3.scale_y = 1.25
         row3.operator("render.render",
                       text="Render Shot",
                       icon='WORKSPACE')
         row3.operator("scene.playblast_fullrender",
                       text="Render Frames",
                       icon='RENDER_ANIMATION')
+
 
 
 classes = [
@@ -1443,7 +1516,9 @@ classes = [
     SCENE_OT_preview_render,
     SCENE_OT_full_render,
     SCENE_OT_pose_frames,
-    SCENE_OT_playblast_fullrender
+    SCENE_OT_playblast_fullrender,
+    SCENE_OT_camera_targetrender,
+    CARTONVIZ_PT_SceneRendering
     
 ]
 
