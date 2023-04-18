@@ -63,13 +63,20 @@ Carton Finishing Tools
 "Corrugate"  adds a procedural shader that mimics cardboard corrugate for the result of the solidify modifier.
 
 
-"Set Full Shot/Set Preview Snap(toggle)" allows a convenience of setting the basic settings needed for either a 512x512 preview render with color management and transparent background, or Full render settings at 2048x2048 for compositing in external software like Photoshop.
+Carton Rendering Tools
 
-"Render Shot" - convenient location for render at current settings that doesn't require traveling up to the window menus or reaching for F12 key.
+"Set Full Shot/Set Preview Snap(toggle)" allows a convenience of setting the basic settings needed for either a 512x512 preview render with color management and transparent background, or Full render settings at 2048x2048 for compositing in external software like Photoshop.
 
 "Set Pose Frames" - introduces an Empty into the scene while setting the frame range to 5 frames, and setting a pose keyframe for the Empty on each frame.
 
+"Set Camera & Target" - adds a new camera to scene and a camera target, sets new camera as active camera
+
+"Render Shot" - convenient location for render at current settings that doesn't require traveling up to the window menus or reaching for F12 key.
+
 "Render Frames" - performs a PlayBlast render of all 5 frmaes to the tmp folder using the current carton name as image name prefix.
+
+
+If I add anything else, it will be likely just streamlining the above
 
 
 
