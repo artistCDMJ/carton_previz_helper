@@ -28,8 +28,8 @@ from mathutils import Vector
 
 bl_info = {"name": "Carton Viz Helper",
            "author": "CDMJ",
-           "version": (3, 47, 0),
-           "blender": (3, 31, 0),
+           "version": (3, 48, 0),
+           "blender": (4, 01, 0),
            "location": "Toolbar > Misc Tab > Carton Viz helper",
            "description": "CDMJ In-House Carton Previz Helper Tool",
            "warning": "",
