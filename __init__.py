@@ -327,9 +327,7 @@ class SCENE_OT_scene_unit(bpy.types.Operator):
     bl_label = "Toggle Unit"
     bl_options = { 'REGISTER', 'UNDO' }
     
-    @classmethod
-    def poll(cls, context):
-        return context.active_object is not None
+
 
     def execute(self, context):
 
@@ -1263,6 +1261,10 @@ class CARTONVIZ_PT_main_panel(bpy.types.Panel):
         row3.scale_x = 0.50
         row3.scale_y = 1.25
         
+        row3.operator("cpv.create_cpv_scene",
+                        text="New Scene",
+                        icon='PREFERENCES')
+        
         scunit = bpy.context.scene.unit_settings.system
         
         if scunit == 'METRIC':
@@ -1272,9 +1274,7 @@ class CARTONVIZ_PT_main_panel(bpy.types.Panel):
             toggle = "Scene is Imperial"
             scicon = "HOOK"
 
-        row3.operator("cpv.create_cpv_scene",
-                        text="New Scene",
-                        icon='PREFERENCES')
+        
         row3.operator("scene.scene_unit",
                       text=toggle,
                       icon=scicon)
