@@ -54,7 +54,8 @@ class SCENE_OT_pose_frames(bpy.types.Operator):
 
         #new code
         ################# Empty And Key Frames for Poses in 5 Frames
-        bpy.ops.object.empty_add(type='PLAIN_AXES', align='WORLD', location=(0, 0, 0), scale=(1, 1, 1))
+        bpy.ops.object.empty_add(type='PLAIN_AXES', align='WORLD', 
+                                location=(0, 0, 0), scale=(1, 1, 1))
         bpy.context.object.name = "Key Pose"
         bpy.context.object.empty_display_size = 5
 
@@ -63,7 +64,19 @@ class SCENE_OT_pose_frames(bpy.types.Operator):
         bpy.ops.anim.keyframe_insert_by_name(type="BUILTIN_KSI_LocRot")
 
         bpy.context.scene.frame_current = 2
-        bpy.ops.transform.rotate(value=-0.785398, orient_axis='Z', orient_type='GLOBAL', orient_matrix=((1, 0, 0), (0, 1, 0), (0, 0, 1)), orient_matrix_type='GLOBAL', constraint_axis=(False, False, True), mirror=False, use_proportional_edit=False, proportional_edit_falloff='SMOOTH', proportional_size=1, use_proportional_connected=False, use_proportional_projected=False, snap=False, snap_elements={'INCREMENT'}, use_snap_project=False, snap_target='CLOSEST', use_snap_self=False, use_snap_edit=False, use_snap_nonedit=False, use_snap_selectable=False)
+        bpy.ops.transform.rotate(value=-0.785398, orient_axis='Z', 
+                        orient_type='GLOBAL', 
+                        orient_matrix=((1, 0, 0), (0, 1, 0), (0, 0, 1)),
+                        orient_matrix_type='GLOBAL', 
+                        constraint_axis=(False, False, True), 
+                        mirror=False, use_proportional_edit=False, 
+                        proportional_edit_falloff='SMOOTH', 
+                        proportional_size=1, use_proportional_connected=False, 
+                        use_proportional_projected=False, snap=False, 
+                        snap_elements={'INCREMENT'}, 
+                        use_snap_project=False, snap_target='CLOSEST', 
+                        use_snap_self=False, use_snap_edit=False, 
+                        use_snap_nonedit=False, use_snap_selectable=False)
 
 
         bpy.ops.anim.keyframe_insert_by_name(type="BUILTIN_KSI_LocRot")
@@ -72,7 +85,19 @@ class SCENE_OT_pose_frames(bpy.types.Operator):
 
         bpy.context.scene.frame_current = 3
 
-        bpy.ops.transform.rotate(value=1.5708, orient_axis='Z', orient_type='GLOBAL', orient_matrix=((1, 0, 0), (0, 1, 0), (0, 0, 1)), orient_matrix_type='GLOBAL', constraint_axis=(False, False, True), mirror=False, use_proportional_edit=False, proportional_edit_falloff='SMOOTH', proportional_size=1, use_proportional_connected=False, use_proportional_projected=False, snap=False, snap_elements={'INCREMENT'}, use_snap_project=False, snap_target='CLOSEST', use_snap_self=False, use_snap_edit=False, use_snap_nonedit=False, use_snap_selectable=False)
+        bpy.ops.transform.rotate(value=1.5708, orient_axis='Z', 
+                        orient_type='GLOBAL',
+                         orient_matrix=((1, 0, 0), (0, 1, 0), (0, 0, 1)), 
+                         orient_matrix_type='GLOBAL', 
+                         constraint_axis=(False, False, True), 
+                         mirror=False, use_proportional_edit=False, 
+                         proportional_edit_falloff='SMOOTH', 
+                         proportional_size=1, use_proportional_connected=False, 
+                         use_proportional_projected=False, snap=False, 
+                         snap_elements={'INCREMENT'}, use_snap_project=False, 
+                         snap_target='CLOSEST', use_snap_self=False, 
+                         use_snap_edit=False, use_snap_nonedit=False, 
+                         use_snap_selectable=False)
 
         bpy.ops.anim.keyframe_insert_by_name(type="BUILTIN_KSI_LocRot")
 
@@ -81,7 +106,19 @@ class SCENE_OT_pose_frames(bpy.types.Operator):
         bpy.context.scene.frame_current = 4
 
         bpy.ops.object.rotation_clear(clear_delta=False)
-        bpy.ops.transform.rotate(value=1.5708, orient_axis='X', orient_type='GLOBAL', orient_matrix=((1, 0, 0), (0, 1, 0), (0, 0, 1)), orient_matrix_type='GLOBAL', constraint_axis=(True, False, False), mirror=False, use_proportional_edit=False, proportional_edit_falloff='SMOOTH', proportional_size=1, use_proportional_connected=False, use_proportional_projected=False, snap=False, snap_elements={'INCREMENT'}, use_snap_project=False, snap_target='CLOSEST', use_snap_self=False, use_snap_edit=False, use_snap_nonedit=False, use_snap_selectable=False)
+        bpy.ops.transform.rotate(value=1.5708, orient_axis='X', 
+                        orient_type='GLOBAL', 
+                        orient_matrix=((1, 0, 0), (0, 1, 0), (0, 0, 1)), 
+                        orient_matrix_type='GLOBAL', 
+                        constraint_axis=(True, False, False), 
+                        mirror=False, use_proportional_edit=False, 
+                        proportional_edit_falloff='SMOOTH', 
+                        proportional_size=1, use_proportional_connected=False, 
+                        use_proportional_projected=False, snap=False, 
+                        snap_elements={'INCREMENT'}, use_snap_project=False, 
+                        snap_target='CLOSEST', use_snap_self=False, 
+                        use_snap_edit=False, use_snap_nonedit=False, 
+                        use_snap_selectable=False)
 
         bpy.ops.anim.keyframe_insert_by_name(type="BUILTIN_KSI_LocRot")
 
@@ -90,7 +127,19 @@ class SCENE_OT_pose_frames(bpy.types.Operator):
 
         bpy.context.scene.frame_current = 5
 
-        bpy.ops.transform.rotate(value=3.14159, orient_axis='X', orient_type='GLOBAL', orient_matrix=((1, 0, 0), (0, 1, 0), (0, 0, 1)), orient_matrix_type='GLOBAL', constraint_axis=(True, False, False), mirror=False, use_proportional_edit=False, proportional_edit_falloff='SMOOTH', proportional_size=1, use_proportional_connected=False, use_proportional_projected=False, snap=False, snap_elements={'INCREMENT'}, use_snap_project=False, snap_target='CLOSEST', use_snap_self=False, use_snap_edit=False, use_snap_nonedit=False, use_snap_selectable=False)
+        bpy.ops.transform.rotate(value=3.14159, orient_axis='X', 
+                        orient_type='GLOBAL', 
+                        orient_matrix=((1, 0, 0), (0, 1, 0), (0, 0, 1)), 
+                        orient_matrix_type='GLOBAL', 
+                        constraint_axis=(True, False, False), mirror=False, 
+                        use_proportional_edit=False, 
+                        proportional_edit_falloff='SMOOTH', 
+                        proportional_size=1, use_proportional_connected=False, 
+                        use_proportional_projected=False, snap=False, 
+                        snap_elements={'INCREMENT'}, use_snap_project=False, 
+                        snap_target='CLOSEST', use_snap_self=False, 
+                        use_snap_edit=False, use_snap_nonedit=False, 
+                        use_snap_selectable=False)
 
 
         bpy.ops.anim.keyframe_insert_by_name(type="BUILTIN_KSI_LocRot")
@@ -191,10 +240,10 @@ class SCENE_OT_preview_render(bpy.types.Operator):
         bpy.context.scene.cycles.samples = 128
         bpy.context.scene.cycles.use_denoising = True
         bpy.context.scene.render.film_transparent = True
+        
+        bpy.context.scene.view_settings.view_transform = 'Filmic'
         bpy.context.scene.view_settings.look = 'High Contrast'
         
-        
-
         return {'FINISHED'}
 
 class SCENE_OT_full_render(bpy.types.Operator):
@@ -264,7 +313,7 @@ class SCENE_OT_scene_unit(bpy.types.Operator):
 
         return {'FINISHED'}
     
-###################################### need to rewrite for toggle on single button :D
+############################### need to rewrite for toggle on single button :D
 
 class OBJECT_OT_front_mapping(bpy.types.Operator):
     """Project selected face to UV Map in UV Editor using Shift \
@@ -481,7 +530,8 @@ class CARTONVIZ_OT_my_op(bpy.types.Operator):
             ob = eval(cmd)
             ob = context.view_layer.objects.active
             ob.dimensions = Vector((x, y, z)) * 2
-            bpy.ops.object.transform_apply(location=False, rotation=False, scale=True)
+            bpy.ops.object.transform_apply(location=False, 
+                                rotation=False, scale=True)
         context.view_layer.objects.active.name = self.item_name
         bpy.ops.transform.translate(value=(0, 0, 4.68563e-05))
 
@@ -583,7 +633,8 @@ class OBJECT_OT_center_mirror(bpy.types.Operator):
 
 
 class OBJECT_OT_apply_xmirror(bpy.types.Operator):
-    """Apply Mirror Modifier and Set X Mirror and Empty Vertex Groups plus two Shape Keys for Fold Work"""
+    """Apply Mirror Modifier and Set X Mirror and Empty Vertex 
+                    Groups plus two Shape Keys for Fold Work"""
     bl_idname = "object.apply_xmirror"
     bl_label = "Xmirror ApplyMods"
     bl_options = {'REGISTER', 'UNDO'}
@@ -754,16 +805,16 @@ class OBJECT_OT_Cameraview_model(bpy.types.Operator):
         bpy.context.object.data.type = 'ORTHO'
         # move cam up in Z by 1 unit
         bpy.ops.transform.translate(value=(0, 0, 1),
-                                    orient_type='GLOBAL',
-                                    orient_matrix=((1, 0, 0), (0, 1, 0), (0, 0, 1)),
-                                    orient_matrix_type='GLOBAL',
-                                    constraint_axis=(False, False, True),
-                                    mirror=True,
-                                    use_proportional_edit=False,
-                                    proportional_edit_falloff='SMOOTH',
-                                    proportional_size=1,
-                                    use_proportional_connected=False,
-                                    use_proportional_projected=False)
+                                orient_type='GLOBAL',
+                                orient_matrix=((1, 0, 0), (0, 1, 0), (0, 0, 1)),
+                                orient_matrix_type='GLOBAL',
+                                constraint_axis=(False, False, True),
+                                mirror=True,
+                                use_proportional_edit=False,
+                                proportional_edit_falloff='SMOOTH',
+                                proportional_size=1,
+                                use_proportional_connected=False,
+                                use_proportional_projected=False)
 
         # switch on composition guides for use in cameraview paint
 
@@ -787,7 +838,7 @@ class OBJECT_OT_Cameraview_model(bpy.types.Operator):
         elif rndx < rndy:
             orthoscale = 1
 
-        # set to use background image and assign from image texture- needs triage
+        # set to use background image and assign from image texture-needs triage
         # bpy.context.object.data.show_background_images = True
 
         # set to orthographic
