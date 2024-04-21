@@ -29,13 +29,48 @@ from mathutils import Vector
 bl_info = {"name": "Carton Viz Helper",
            "author": "CDMJ",
            "version": (3, 48, 0),
-           "blender": (4, 01, 0),
+           "blender": (4, 1, 0),
            "location": "Toolbar > Misc Tab > Carton Viz helper",
            "description": "CDMJ In-House Carton Previz Helper Tool",
            "warning": "",
            "category": "Object"}
 
 ########################## Extra Hot Mess 
+
+#------------------------ CV SCENE
+class SCENE_OT_CartonScene(bpy.types.Operator):
+    """Create Carton PreViz Scene"""
+    bl_description = "Create Scene for Working in Carton Previz Helper"
+    bl_idname = "cpv.create_cpv_scene"
+    bl_label = "Create Scene for Carton Viz"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    @classmethod
+    def poll(self, context):
+        for sc in bpy.data.scenes:
+            if sc.name == "Carton PreViz":
+                return False
+        return context.area.type == 'VIEW_3D'
+
+    def execute(self, context):
+        _name = "Carton PreViz"
+        for sc in bpy.data.scenes:
+            if sc.name == _name:
+                return {'FINISHED'}
+
+        bpy.ops.scene.new(type='NEW')
+        context.scene.name = _name
+       
+       
+        #set to top view
+        bpy.ops.view3d.view_axis(type='TOP', align_active=True)
+        #set to Cycles
+        bpy.context.scene.render.engine = 'CYCLES'
+
+
+       
+
+        return {'FINISHED'}
 
 class SCENE_OT_pose_frames(bpy.types.Operator):
     """Set up empty and keyframes over 5 frames for posing to camera"""
@@ -1237,7 +1272,9 @@ class CARTONVIZ_PT_main_panel(bpy.types.Panel):
             toggle = "Scene is Imperial"
             scicon = "HOOK"
 
-        
+        row3.operator("cpv.create_cpv_scene",
+                        text="New Scene",
+                        icon='PREFERENCES')
         row3.operator("scene.scene_unit",
                       text=toggle,
                       icon=scicon)
@@ -1569,7 +1606,8 @@ classes = [
     SCENE_OT_pose_frames,
     SCENE_OT_playblast_fullrender,
     SCENE_OT_camera_targetrender,
-    CARTONVIZ_PT_SceneRendering
+    CARTONVIZ_PT_SceneRendering,
+    SCENE_OT_CartonScene
     
 ]
 
