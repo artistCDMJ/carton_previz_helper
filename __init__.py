@@ -871,14 +871,27 @@ class OBJECT_OT_Cameraview_model(bpy.types.Operator):
         elif rndx < rndy:
             orthoscale = 1
 
-        # set to use background image and assign from image texture-needs triage
-        # bpy.context.object.data.show_background_images = True
-
         # set to orthographic
-        bpy.context.object.data.ortho_scale = orthoscale
-        # constrint removed, didn't work well enough
+        bpy.context.object.data.ortho_scale = orthoscale        
+        
         # need to make "ref_dieline_proxy" Parent of "Dieline Camera View"
         # then no matter what rotation the ref dieline is, the camera follows
+        # Names of the objects
+        child_object_name = "Dieline Camera View"
+        parent_object_name = "ref_dieline_proxy"
+
+        # Get the objects
+        child_object = bpy.data.objects.get(child_object_name)
+        parent_object = bpy.data.objects.get(parent_object_name)
+
+        # Check if both objects exist
+        if child_object and parent_object:
+            # Set the parent
+            child_object.parent = parent_object
+            print(f"'{child_object_name}' is now parented to '{parent_object_name}'.")
+        else:
+            print("One or both objects were not found.")
+            
         bpy.context.object.data.show_name = True
         # hide camera itself
         bpy.ops.object.hide_view_set(unselected=False)
