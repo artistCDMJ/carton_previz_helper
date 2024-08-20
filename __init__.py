@@ -28,14 +28,13 @@ from mathutils import Vector
 
 bl_info = {"name": "Carton Viz Helper",
            "author": "CDMJ",
-           "version": (3, 48, 0),
-           "blender": (4, 1, 0),
-           "location": "Toolbar > Misc Tab > Carton Viz helper",
-           "description": "CDMJ In-House Carton Previz Helper Tool",
+           "version": (3, 50, 0),
+           "blender": (4, 2, 0),
+           "location": "N-Panel > Carton Viz",
+           "description": "CDMJ In-House Carton PreViz Helper Tool",
            "warning": "",
            "category": "Object"}
 
-########################## Extra Hot Mess 
 
 #------------------------ CV SCENE
 class SCENE_OT_CartonScene(bpy.types.Operator):
@@ -1260,7 +1259,7 @@ class CARTONVIZ_PT_main_panel(bpy.types.Panel):
     bl_idname = "cartonviz_PT_main_panel"
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'UI'
-    bl_category = "Carton Viz Helper"
+    bl_category = "Carton Viz"
     bl_options = {'DEFAULT_CLOSED'}
 
     def draw(self, context):
