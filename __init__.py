@@ -876,11 +876,9 @@ class OBJECT_OT_Cameraview_model(bpy.types.Operator):
 
         # set to orthographic
         bpy.context.object.data.ortho_scale = orthoscale
-        # try to constrain cam to canvas here
-        bpy.ops.object.constraint_add(type='COPY_ROTATION')
-        bpy.context.object.constraints[
-            "Copy Rotation"].target = bpy.data.objects["ref_dieline_proxy"]
-
+        # constrint removed, didn't work well enough
+        # need to make "ref_dieline_proxy" Parent of "Dieline Camera View"
+        # then no matter what rotation the ref dieline is, the camera follows
         bpy.context.object.data.show_name = True
         # hide camera itself
         bpy.ops.object.hide_view_set(unselected=False)
