@@ -66,6 +66,12 @@ class SCENE_OT_CartonScene(bpy.types.Operator):
         bpy.ops.view3d.view_axis(type='TOP', align_active=True)
         #set to Cycles
         bpy.context.scene.render.engine = 'CYCLES'
+        bpy.context.scene.display_settings.display_device = 'sRGB'
+        bpy.context.scene.view_settings.view_transform = 'Filmic'
+        bpy.context.scene.view_settings.look = 'Very High Contrast'
+
+        
+
 
 
        
@@ -522,7 +528,7 @@ class CARTONVIZ_PG_add_object_helper(bpy.types.PropertyGroup):
     )
 
 
-class CARTONVIZ_OT_my_op(bpy.types.Operator):
+class CARTONVIZ_OT_AddStart(bpy.types.Operator):
     bl_label = "Add Object"
     bl_idname = "cartonviz.myop_operator"
 
@@ -543,6 +549,7 @@ class CARTONVIZ_OT_my_op(bpy.types.Operator):
         name="Name",
         description="Name for Generated Object",
     )
+
     @classmethod
     def poll(cls, context):
         return context.area.type == 'VIEW_3D'
@@ -557,15 +564,26 @@ class CARTONVIZ_OT_my_op(bpy.types.Operator):
         x, y, z = unit_conversion(context, Vector(self.item_dimensions))
         if self.item_type in scalable_objs:
             cmd = f"bpy.ops.mesh.{self.item_type}(scale=({x}, {y}, {z}))"
-            ob = eval(cmd)
+            eval(cmd)
         else:
             cmd = f"bpy.ops.mesh.{self.item_type}()"
-            ob = eval(cmd)
+            eval(cmd)
             ob = context.view_layer.objects.active
             ob.dimensions = Vector((x, y, z)) * 2
             bpy.ops.object.transform_apply(location=False, 
                                 rotation=False, scale=True)
+
+        # Set the name of the generated object
         context.view_layer.objects.active.name = self.item_name
+
+        # Make the generated object a child of "ref_dieline_proxy"
+        generated_object = bpy.data.objects.get(self.item_name)
+        parent_object = bpy.data.objects.get("ref_dieline_proxy")
+
+        if generated_object and parent_object:
+            generated_object.parent = parent_object
+            print(f"'{self.item_name}' is now parented to 'ref_dieline_proxy'.")
+
         bpy.ops.transform.translate(value=(0, 0, 4.68563e-05))
 
         return {'FINISHED'}
@@ -1064,15 +1082,15 @@ class CARTONVIZ_OT_add_fiberboard(bpy.types.Operator):
         voronoi.label = ("Clumping Pattern")
         voronoi.inputs[2].default_value = 1
 
-        ###Musgrave Tex Node       
-        mus1 = material_fiber.node_tree.nodes.new('ShaderNodeTexMusgrave')
-        mus1.location = (-700, 400)
-        mus1.label = ("Breaking Pattern")
-        mus1.musgrave_type = 'HYBRID_MULTIFRACTAL'
-        mus1.inputs[2].default_value = 368.4
-        mus1.inputs[3].default_value = 15
-        mus1.inputs[4].default_value = 62.4
-        mus1.inputs[5].default_value = 1.1
+        ###noisegrave Tex Node       
+        noise1 = material_fiber.node_tree.nodes.new('ShaderNodeTexNoise')
+        noise1.location = (-700, 400)
+        noise1.label = ("Breaking Pattern")
+        noise1.noise_type = 'HYBRID_MULTIFRACTAL'
+        noise1.inputs[2].default_value = 368.4
+        noise1.inputs[3].default_value = 15
+        noise1.inputs[4].default_value = 62.4
+        noise1.inputs[5].default_value = 1.1
 
         ###Color Mix Node Mix
         mix = material_fiber.node_tree.nodes.new('ShaderNodeMixRGB')
@@ -1082,15 +1100,15 @@ class CARTONVIZ_OT_add_fiberboard(bpy.types.Operator):
         mix.inputs[1].default_value = (0.0784733, 0.0723242, 0.0403656, 1)
         mix.inputs[2].default_value = (0.134364, 0.117563, 0.0779412, 1)
 
-        ###Musgrave Tex Node       
-        mus2 = material_fiber.node_tree.nodes.new('ShaderNodeTexMusgrave')
-        mus2.location = (-800, 100)
-        mus2.label = ("overlay Pattern")
-        mus2.musgrave_type = 'FBM'
-        mus2.inputs[2].default_value = 57.7
-        mus2.inputs[3].default_value = 2.0
-        mus2.inputs[4].default_value = 2.0
-        mus2.inputs[5].default_value = 2.0
+        ###noisegrave Tex Node       
+        noise2 = material_fiber.node_tree.nodes.new('ShaderNodeTexNoise')
+        noise2.location = (-800, 100)
+        noise2.label = ("overlay Pattern")
+        noise2.noise_type = 'FBM'
+        noise2.inputs[2].default_value = 57.7
+        noise2.inputs[3].default_value = 2.0
+        noise2.inputs[4].default_value = 2.0
+        noise2.inputs[5].default_value = 2.0
 
         ###Ramp for Overlay       
         ramp = material_fiber.node_tree.nodes.new('ShaderNodeValToRGB')
@@ -1124,11 +1142,11 @@ class CARTONVIZ_OT_add_fiberboard(bpy.types.Operator):
 
         link(texcoord.outputs[0], mapping.inputs[0])
         link(mapping.outputs[0], voronoi.inputs[0])
-        link(mapping.outputs[0], mus2.inputs[0])
-        link(voronoi.outputs[0], mus1.inputs[6])
-        link(mus1.outputs[0], mix.inputs[0])
+        link(mapping.outputs[0], noise2.inputs[0])
+        link(voronoi.outputs[0], noise1.inputs[6])
+        link(noise1.outputs[0], mix.inputs[0])
         link(mix.outputs[0], mult.inputs[1])
-        link(mus2.outputs[0], ramp.inputs[0])
+        link(noise2.outputs[0], ramp.inputs[0])
         link(ramp.outputs[0], invert.inputs[1])
         link(invert.outputs[0], mult.inputs[2])
         link(mult.outputs[0], color.inputs[1])
@@ -1179,15 +1197,15 @@ class CARTONVIZ_OT_add_corrugate(bpy.types.Operator):
         mapping.location = (-1200, 400)
         mapping.label = ("Mapping Control")
 
-        ###Musgrave Tex Node       
-        musG = material_corrugate.node_tree.nodes.new('ShaderNodeTexMusgrave')
-        musG.location = (-1000, 300)
-        musG.label = ("Fine Detail")
-        musG.musgrave_type = 'FBM'
-        musG.inputs[2].default_value = 392.5
-        musG.inputs[3].default_value = 4.7
-        musG.inputs[4].default_value = 2.0
-        musG.inputs[5].default_value = 21.6
+        ###noisegrave Tex Node       
+        noiseG = material_corrugate.node_tree.nodes.new('ShaderNodeTexNoise')
+        noiseG.location = (-1000, 300)
+        noiseG.label = ("Fine Detail")
+        noiseG.noise_type = 'FBM'
+        noiseG.inputs[2].default_value = 392.5
+        noiseG.inputs[3].default_value = 4.7
+        noiseG.inputs[4].default_value = 2.0
+        noiseG.inputs[5].default_value = 21.6
 
         ###Wave Tex Node       
         wave = material_corrugate.node_tree.nodes.new('ShaderNodeTexWave')
@@ -1225,9 +1243,9 @@ class CARTONVIZ_OT_add_corrugate(bpy.types.Operator):
         link = material_corrugate.node_tree.links.new
 
         link(texcoord.outputs[0], mapping.inputs[0])
-        link(mapping.outputs[0], musG.inputs[0])
+        link(mapping.outputs[0], noiseG.inputs[0])
         link(mapping.outputs[0], wave.inputs[0])
-        link(musG.outputs[0], wave.inputs[6])
+        link(noiseG.outputs[0], wave.inputs[6])
         link(wave.outputs[0], mix.inputs[0])
         link(wave.outputs[0], bump.inputs[2])
         link(mix.outputs[0], mult.inputs[1])
@@ -1589,7 +1607,7 @@ class CARTONVIZ_PT_SceneRendering(bpy.types.Panel):
 classes = [
     CARTONVIZ_PG_add_object_helper,
     CARTONVIZ_PT_main_panel,
-    CARTONVIZ_OT_my_op,
+    CARTONVIZ_OT_AddStart,
     CARTONVIZ_OT_my_collection,
     SCENE_OT_scene_unit,
     OBJECT_OT_front_mapping,
