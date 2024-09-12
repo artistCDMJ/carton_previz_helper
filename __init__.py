@@ -28,7 +28,7 @@ from mathutils import Vector
 
 bl_info = {"name": "Carton Viz Helper",
            "author": "CDMJ",
-           "version": (3, 50, 0),
+           "version": (3, 50, 2),
            "blender": (4, 2, 0),
            "location": "N-Panel > Carton Viz",
            "description": "CDMJ In-House Carton PreViz Helper Tool",
@@ -1275,7 +1275,7 @@ class CARTONVIZ_PT_main_panel(bpy.types.Panel):
         row1 = row.split(align=True)
         row1.scale_x = 0.50
         row1.scale_y = 1.25
-        row1.operator("import_image.to_plane",
+        row1.operator("image.import_as_mesh_planes",
                       text="Load Dieline",
                       icon='MESH_GRID')
         row2 = row.split(align=True)
@@ -1424,7 +1424,7 @@ class CARTONVIZ_PT_CartonUVMapping(bpy.types.Panel):
     bl_idname = "cartonviz_PT_CartonMapping"
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
-    bl_category = "Carton Viz Helper"
+    bl_category = "Carton Viz"
     bl_options = {'DEFAULT_CLOSED'}
 
     def draw(self, context):
@@ -1482,7 +1482,7 @@ class CARTONVIZ_PT_CartonFinishing(bpy.types.Panel):
     bl_idname = "cartonviz_PT_CartonFinishing"
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
-    bl_category = "Carton Viz Helper"
+    bl_category = "Carton Viz"
     bl_options = {'DEFAULT_CLOSED'}
 
     def draw(self, context):
@@ -1543,7 +1543,7 @@ class CARTONVIZ_PT_SceneRendering(bpy.types.Panel):
     bl_idname = "cartonviz_PT_CartonRendering"
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
-    bl_category = "Carton Viz Helper"
+    bl_category = "Carton Viz"
     bl_options = {'DEFAULT_CLOSED'}
 
     def draw(self, context):
