@@ -28,7 +28,7 @@ from mathutils import Vector
 
 bl_info = {"name": "Carton Viz Helper",
            "author": "CDMJ",
-           "version": (3, 50, 2),
+           "version": (3, 50, 3),
            "blender": (4, 2, 0),
            "location": "N-Panel > Carton Viz",
            "description": "CDMJ In-House Carton PreViz Helper Tool",
@@ -202,12 +202,12 @@ class SCENE_OT_camera_targetrender(bpy.types.Operator):
     def execute(self, context):
         #add new camera target empty
 
-        bpy.ops.object.empty_add(type='SPHERE', 
-                    align='WORLD', 
-                    location=(0, 0, 0), 
-                    scale=(1, 1, 1))
-        ctarget = bpy.context.object
-        ctarget.name = "Camera Target"
+        #bpy.ops.object.empty_add(type='SPHERE', 
+                    #align='WORLD', 
+                    #location=(0, 0, 0), 
+                    #scale=(1, 1, 1))
+        #ctarget = bpy.context.object
+        #ctarget.name = "Camera Target"
 
         #add new camera to scene make it track the target empty
         bpy.ops.object.camera_add(enter_editmode=False, align='WORLD', 
@@ -219,8 +219,8 @@ class SCENE_OT_camera_targetrender(bpy.types.Operator):
         bpy.context.object.name = "Camera Target Render"
         bpy.context.object.data.show_composition_thirds = True
 
-        bpy.ops.object.constraint_add(type='TRACK_TO')
-        bpy.context.object.constraints["Track To"].target = ctarget    
+        #bpy.ops.object.constraint_add(type='TRACK_TO')
+        #bpy.context.object.constraints["Track To"].target = ctarget    
             
             
 
@@ -270,8 +270,8 @@ class SCENE_OT_preview_render(bpy.types.Operator):
 
 
         #new code
-        bpy.context.scene.render.resolution_x = 1024
-        bpy.context.scene.render.resolution_y = 1024
+        bpy.context.scene.render.resolution_x = 1200
+        bpy.context.scene.render.resolution_y = 1200
         bpy.context.scene.render.resolution_percentage = 50
         
 
@@ -302,8 +302,8 @@ class SCENE_OT_full_render(bpy.types.Operator):
 
 
         #new code
-        bpy.context.scene.render.resolution_x = 1024
-        bpy.context.scene.render.resolution_y = 1024
+        bpy.context.scene.render.resolution_x = 1200
+        bpy.context.scene.render.resolution_y = 1200
         bpy.context.scene.render.resolution_percentage = 200
         
 
@@ -671,9 +671,19 @@ class OBJECT_OT_center_mirror(bpy.types.Operator):
         return context.active_object is not None
 
     def execute(self, context):
-        # idea to align cursor to selection and center and add a mirror modifier
+        # idea to align cursor to selection and center and add a mirror modifier        
+        
         bpy.ops.view3d.snap_cursor_to_selected()
-        bpy.ops.object.editmode_toggle()
+        
+        mode = bpy.context.mode        
+        if mode == 'EDIT':
+            bpy.ops.object.mode_set(mode='OBJECT')
+        else:
+            bpy.ops.object.mode_set(mode='OBJECT')
+            
+        
+        #bpy.ops.object.editmode_toggle()
+        
         bpy.ops.object.origin_set(type='ORIGIN_CURSOR', center='MEDIAN')
         bpy.ops.object.editmode_toggle()
         bpy.ops.object.modifier_add(type='MIRROR')
@@ -694,6 +704,15 @@ class OBJECT_OT_apply_xmirror(bpy.types.Operator):
         return context.active_object is not None
 
     def execute(self, context):
+        #set up loop to make this work in Edit or Object
+        mode = bpy.context.mode        
+        if mode == 'EDIT':
+            bpy.ops.object.mode_set(mode='OBJECT')
+        else:
+            bpy.ops.object.mode_set(mode='OBJECT')
+        
+        
+        
         bpy.ops.object.convert(target='MESH')
         # bpy.ops.object.editmode_toggle()
         bpy.context.object.data.use_mirror_x = True
@@ -713,8 +732,10 @@ class OBJECT_OT_apply_xmirror(bpy.types.Operator):
         obj = context.object
 
         sk_flat = obj.shape_key_add(name='FLAT CARTON', from_mix=False)
-
+        bpy.data.shape_keys["Key"].key_blocks["FLAT CARTON"].lock_shape = True
         obj.data.shape_keys.use_relative = True
+        bpy.context.object.active_shape_key_index = 1
+
 
         sk_fold = obj.shape_key_add(name='FOLDED', from_mix = False)
 
@@ -780,7 +801,7 @@ class SCENE_OT_scene_pivot(bpy.types.Operator):
 
 
 class OBJECT_OT_cardboard(bpy.types.Operator):
-    """Set A Cardboard Solidify Ready for Material Index 1"""
+    """Set A Cardboard Solidify Ready for Material Index 1 and an Edge Split"""
     bl_idname = "object.cardboard"
     bl_label = "Set Cardboard Thickness and Material"
 
@@ -792,10 +813,16 @@ class OBJECT_OT_cardboard(bpy.types.Operator):
         scene = context.scene
 
         bpy.ops.object.modifier_add(type='SOLIDIFY')
-        bpy.context.object.modifiers["Solidify"].thickness = 0.002
+        bpy.context.object.modifiers["Solidify"].thickness = 0.000575158
         bpy.context.object.modifiers["Solidify"].use_even_offset = True
         bpy.context.object.modifiers["Solidify"].material_offset = 1
         bpy.context.object.modifiers["Solidify"].material_offset_rim = 1
+        
+        #edge split as well
+        bpy.ops.object.modifier_add(type='EDGE_SPLIT')
+        bpy.ops.object.shade_smooth()
+
+
 
         return {'FINISHED'}
 
