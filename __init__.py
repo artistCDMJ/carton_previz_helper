@@ -1,6 +1,7 @@
 import bpy
 from string import Template
 from mathutils import Vector
+import bmesh
 
 # -*- coding: utf8 -*-
 # python
@@ -1279,7 +1280,55 @@ class CARTONVIZ_OT_add_corrugate(bpy.types.Operator):
         link(bump.outputs[0], principled_node.inputs[22])
 
         return {'FINISHED'}
+###new ops
+class OBJECT_OT_snap_and_realign(bpy.types.Operator):
+    bl_idname = "object.snap_and_realign"
+    bl_label = "Snap Cursor to Face and Realign Object"
+    bl_options = {'REGISTER', 'UNDO'}
 
+    def execute(self, context):
+        obj = context.active_object
+
+        if obj is None or obj.type != 'MESH':
+            self.report({'ERROR'}, "Active object must be a mesh")
+            return {'CANCELLED'}
+
+        if context.mode != 'EDIT_MESH':
+            self.report({'ERROR'}, "Start in Edit Mode with a face selected")
+            return {'CANCELLED'}
+
+        # Step 1: Get selected face center in world coordinates
+        bm = bmesh.from_edit_mesh(obj.data)
+        bm.faces.ensure_lookup_table()
+        selected_faces = [f for f in bm.faces if f.select]
+
+        if not selected_faces:
+            self.report({'ERROR'}, "No face selected")
+            return {'CANCELLED'}
+
+        face = selected_faces[0]
+        face_center_local = face.calc_center_median()
+        face_center_world = obj.matrix_world @ face_center_local
+
+        # Step 2: Snap cursor to selected face center
+        context.scene.cursor.location = face_center_world
+
+        # Step 3: Switch to Object Mode
+        bpy.ops.object.mode_set(mode='OBJECT')
+
+        # Step 4: Set origin to cursor (face center)
+        bpy.ops.object.origin_set(type='ORIGIN_CURSOR')
+
+        # Step 5: Move cursor to world origin
+        context.scene.cursor.location = (0.0, 0.0, 0.0)
+
+        # Step 6: Snap object to cursor
+        bpy.ops.object.select_all(action='DESELECT')
+        obj.select_set(True)
+        context.view_layer.objects.active = obj
+        bpy.ops.view3d.snap_selected_to_cursor(use_offset=False)
+
+        return {'FINISHED'}
 
 class CARTONVIZ_PT_main_panel(bpy.types.Panel):
     bl_label = "Carton Primitive Panel"
@@ -1385,6 +1434,10 @@ class CARTONVIZ_PT_main_panel(bpy.types.Panel):
 
         make_coll = col.operator("cartonviz.my_collection")
         make_coll.coll_name = obj_name
+        
+        col.operator("object.snap_and_realign",
+                     text="Snap to World",
+                     icon='WORLD_DATA')
 
         box = layout.box()
         col = box.column(align=True)
@@ -1662,7 +1715,8 @@ classes = [
     SCENE_OT_playblast_fullrender,
     SCENE_OT_camera_targetrender,
     CARTONVIZ_PT_SceneRendering,
-    SCENE_OT_CartonScene
+    SCENE_OT_CartonScene,
+    OBJECT_OT_snap_and_realign
     
 ]
 
