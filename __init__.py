@@ -29,7 +29,7 @@ import bmesh
 
 bl_info = {"name": "Carton Viz Helper",
            "author": "CDMJ",
-           "version": (3, 50, 3),
+           "version": (3, 50, 4),
            "blender": (4, 2, 0),
            "location": "N-Panel > Carton Viz",
            "description": "CDMJ In-House Carton PreViz Helper Tool",
@@ -336,20 +336,29 @@ class SCENE_OT_scene_unit(bpy.types.Operator):
 
 
     def execute(self, context):
-
-        scene = context.scene
-
-
-        #new code
-
-        if bpy.context.scene.unit_settings.system == 'METRIC':
+        
+        
+        #updated for copy from set measure apply improvement
+        
+        if bpy.context.scene.unit_settings.length_unit == 'MILLIMETERS':
             bpy.context.scene.unit_settings.system = 'IMPERIAL'
-        elif bpy.context.scene.unit_settings.system == 'IMPERIAL':
-            bpy.context.scene.unit_settings.system = 'METRIC'
+            bpy.context.scene.unit_settings.length_unit = 'INCHES'
+            bpy.context.space_data.overlay.grid_subdivisions = 12
+            bpy.context.scene.unit_settings.scale_length = 0.0833
+
             
         else:
             bpy.context.scene.unit_settings.system = 'METRIC'
+            bpy.context.scene.unit_settings.length_unit = 'MILLIMETERS'
+            bpy.context.space_data.overlay.grid_subdivisions = 10 
+            bpy.context.space_data.overlay.grid_scale = 0.1
 
+            bpy.context.scene.unit_settings.scale_length = 0.001
+        
+        bpy.context.scene.tool_settings.use_snap = True
+        bpy.context.scene.tool_settings.snap_elements_base = {'GRID'}
+
+        
         return {'FINISHED'}
     
 ############################### need to rewrite for toggle on single button :D
