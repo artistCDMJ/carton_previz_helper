@@ -1385,7 +1385,7 @@ class CARTONVIZ_OT_add_basic(bpy.types.Operator):
         link(colormap_node.outputs[0], mix_node.inputs[2])
         link(mix_node.outputs[0], mix_node2.inputs[1])
         link(bumpmap_node.outputs[0], bump_node.inputs[3])
-        link(bump_node.outputs[0], principled_node.inputs[23])
+        link(bump_node.outputs[0], principled_node.inputs[5])
 
         link(uv_node.outputs[0], dieline_node.inputs[0])
         link(uv_node.outputs[0], colormap_node.inputs[0])
