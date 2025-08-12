@@ -1187,7 +1187,7 @@ class OBJECT_OT_cardboard(bpy.types.Operator):
         scene = context.scene
 
         bpy.ops.object.modifier_add(type='SOLIDIFY')
-        bpy.context.object.modifiers["Solidify"].thickness = 0.000575158
+        bpy.context.object.modifiers["Solidify"].thickness = 0.00575158
         bpy.context.object.modifiers["Solidify"].use_even_offset = True
         bpy.context.object.modifiers["Solidify"].material_offset = 1
         bpy.context.object.modifiers["Solidify"].material_offset_rim = 1
@@ -1322,8 +1322,8 @@ class CARTONVIZ_OT_add_basic(bpy.types.Operator):
 
         ###Principled Node Options
         principled_node.inputs[0].default_value = (1, 0, 0, 1)
-        principled_node.inputs[6].default_value = (0.2)
-        principled_node.inputs[9].default_value = (0.282)
+        principled_node.inputs[1].default_value = (0.2)
+        principled_node.inputs[2].default_value = (0.127)
 
         ###Image Texture Node named Dieline        
         dieline_node = material_basic.node_tree.nodes.new('ShaderNodeTexImage')
@@ -1384,8 +1384,8 @@ class CARTONVIZ_OT_add_basic(bpy.types.Operator):
         link(dieline_node.outputs[0], mix_node.inputs[1])
         link(colormap_node.outputs[0], mix_node.inputs[2])
         link(mix_node.outputs[0], mix_node2.inputs[1])
-        link(bumpmap_node.outputs[0], bump_node.inputs[2])
-        link(bump_node.outputs[0], principled_node.inputs[22])
+        link(bumpmap_node.outputs[0], bump_node.inputs[3])
+        link(bump_node.outputs[0], principled_node.inputs[23])
 
         link(uv_node.outputs[0], dieline_node.inputs[0])
         link(uv_node.outputs[0], colormap_node.inputs[0])
@@ -1426,7 +1426,7 @@ class CARTONVIZ_OT_add_fiberboard(bpy.types.Operator):
 
         ###Principled Node Options for Fiberboard
         principled_node.inputs[0].default_value = (1, 1, 1, 1)
-        principled_node.inputs[9].default_value = (0.575)
+        principled_node.inputs[3].default_value = (0.575)
 
         ###Tex Coordinate Node       
         texcoord = material_fiber.node_tree.nodes.new('ShaderNodeTexCoord')
@@ -1448,11 +1448,11 @@ class CARTONVIZ_OT_add_fiberboard(bpy.types.Operator):
         noise1 = material_fiber.node_tree.nodes.new('ShaderNodeTexNoise')
         noise1.location = (-700, 400)
         noise1.label = ("Breaking Pattern")
-        noise1.noise_type = 'HYBRID_MULTIFRACTAL'
-        noise1.inputs[2].default_value = 368.4
-        noise1.inputs[3].default_value = 15
-        noise1.inputs[4].default_value = 62.4
-        noise1.inputs[5].default_value = 1.1
+        #noise1.noise_type = 'HYBRID_MULTIFRACTAL'
+        noise1.inputs[1].default_value = 368.4
+        noise1.inputs[2].default_value = 15
+        noise1.inputs[3].default_value = 62.4
+        noise1.inputs[4].default_value = 1.1
 
         ###Color Mix Node Mix
         mix = material_fiber.node_tree.nodes.new('ShaderNodeMixRGB')
@@ -1466,11 +1466,11 @@ class CARTONVIZ_OT_add_fiberboard(bpy.types.Operator):
         noise2 = material_fiber.node_tree.nodes.new('ShaderNodeTexNoise')
         noise2.location = (-800, 100)
         noise2.label = ("overlay Pattern")
-        noise2.noise_type = 'FBM'
-        noise2.inputs[2].default_value = 57.7
+        #noise2.noise_type = 'FBM'
+        noise2.inputs[1].default_value = 57.7
+        noise2.inputs[2].default_value = 2.0
         noise2.inputs[3].default_value = 2.0
         noise2.inputs[4].default_value = 2.0
-        noise2.inputs[5].default_value = 2.0
 
         ###Ramp for Overlay       
         ramp = material_fiber.node_tree.nodes.new('ShaderNodeValToRGB')
@@ -1505,7 +1505,7 @@ class CARTONVIZ_OT_add_fiberboard(bpy.types.Operator):
         link(texcoord.outputs[0], mapping.inputs[0])
         link(mapping.outputs[0], voronoi.inputs[0])
         link(mapping.outputs[0], noise2.inputs[0])
-        link(voronoi.outputs[0], noise1.inputs[6])
+        link(voronoi.outputs[0], noise1.inputs[5])
         link(noise1.outputs[0], mix.inputs[0])
         link(mix.outputs[0], mult.inputs[1])
         link(noise2.outputs[0], ramp.inputs[0])
@@ -1563,11 +1563,11 @@ class CARTONVIZ_OT_add_corrugate(bpy.types.Operator):
         noiseG = material_corrugate.node_tree.nodes.new('ShaderNodeTexNoise')
         noiseG.location = (-1000, 300)
         noiseG.label = ("Fine Detail")
-        noiseG.noise_type = 'FBM'
-        noiseG.inputs[2].default_value = 392.5
-        noiseG.inputs[3].default_value = 4.7
-        noiseG.inputs[4].default_value = 2.0
-        noiseG.inputs[5].default_value = 21.6
+        #noiseG.noise_type = 'FBM'
+        noiseG.inputs[1].default_value = 392.5
+        noiseG.inputs[2].default_value = 4.7
+        noiseG.inputs[3].default_value = 2.0
+        noiseG.inputs[4].default_value = 21.6
 
         ###Wave Tex Node       
         wave = material_corrugate.node_tree.nodes.new('ShaderNodeTexWave')
@@ -1607,12 +1607,12 @@ class CARTONVIZ_OT_add_corrugate(bpy.types.Operator):
         link(texcoord.outputs[0], mapping.inputs[0])
         link(mapping.outputs[0], noiseG.inputs[0])
         link(mapping.outputs[0], wave.inputs[0])
-        link(noiseG.outputs[0], wave.inputs[6])
+        link(noiseG.outputs[0], wave.inputs[5])
         link(wave.outputs[0], mix.inputs[0])
         link(wave.outputs[0], bump.inputs[2])
         link(mix.outputs[0], mult.inputs[1])
         link(mult.outputs[0], principled_node.inputs[0])
-        link(bump.outputs[0], principled_node.inputs[22])
+        link(bump.outputs[0], principled_node.inputs[23])
 
         return {'FINISHED'}
 ###new ops
