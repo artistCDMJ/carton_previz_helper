@@ -1,3 +1,4 @@
+#_________________head and license
 import bpy
 from string import Template
 from mathutils import Vector
@@ -32,12 +33,50 @@ from bpy.props import FloatProperty, PointerProperty, EnumProperty, IntProperty,
 
 bl_info = {"name": "Carton Viz Helper",
            "author": "CDMJ",
-           "version": (3, 50, 4),
-           "blender": (4, 2, 0),
+           "version": (3, 50, 7),
+           "blender": (4, 5, 1),
            "location": "N-Panel > Carton Viz",
            "description": "CDMJ In-House Carton PreViz Helper Tool",
            "warning": "",
            "category": "Object"}
+
+#______________Functions
+
+# ---------- Helper ----------
+def get_image_from_object(obj):
+    if obj and obj.type == 'MESH':
+        for mat in obj.data.materials:
+            if mat and mat.node_tree:
+                for node in mat.node_tree.nodes:
+                    if node.type == 'TEX_IMAGE' and node.image:
+                        return node.image
+    return None
+
+
+def get_image_from_object(obj):
+    """Get the first image texture from the object's material slots."""
+    if obj.type != 'MESH':
+        return None
+    for mat in obj.data.materials:
+        if mat and mat.use_nodes:
+            for node in mat.node_tree.nodes:
+                if node.type == 'TEX_IMAGE' and node.image:
+                    return node.image
+    return None
+
+
+
+#_______________________Property Type
+
+##____________________DPI_CORRECTION
+# ---------- Property Group ----------
+class DPIScalerProperties(bpy.types.PropertyGroup):
+    dpi: bpy.props.IntProperty(
+        name="DPI",
+        default=150,
+        min=1,
+        description="Dots per inch for scaling image plane"
+    )
 
 #_____________________set measure apply conditional
 class SELProperties(PropertyGroup):
@@ -118,6 +157,56 @@ class KnockoutProperties(bpy.types.PropertyGroup):
         min=0.001,
         subtype='DISTANCE'
     )
+
+
+
+#_______________________Operator Type
+
+# ---------- Operator ----------
+class OBJECT_OT_scale_image_plane(bpy.types.Operator):
+    bl_idname = "object.scale_image_plane_dpi"
+    bl_label = "Scale Image Plane to DPI"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    def execute(self, context):
+        obj = context.active_object
+        dpi = context.scene.dpi_scaler_props.dpi
+        scene = context.scene
+        unit_system = scene.unit_settings.system
+        scale_length = scene.unit_settings.scale_length
+
+        image = get_image_from_object(obj)
+        if not image:
+            self.report({'ERROR'}, "Active object has no image texture")
+            return {'CANCELLED'}
+
+        width_px, height_px = image.size
+
+        # Physical size in inches
+        width_in = width_px / dpi
+        height_in = height_px / dpi
+
+        # Convert to BU depending on unit system
+        if unit_system == 'IMPERIAL':
+            inches_per_BU = scale_length * 39.3701
+            target_width_BU = width_in / inches_per_BU
+            target_height_BU = height_in / inches_per_BU
+        elif unit_system == 'METRIC':
+            mm_per_BU = scale_length * 1000
+            target_width_BU = (width_in * 25.4) / mm_per_BU
+            target_height_BU = (height_in * 25.4) / mm_per_BU
+        else:
+            target_width_BU = (width_in * 0.0254) / scale_length
+            target_height_BU = (height_in * 0.0254) / scale_length
+
+        # Apply dimensions directly
+        obj.dimensions = (target_width_BU, target_height_BU, obj.dimensions.z)
+
+        self.report({'INFO'}, f"Scaled to {width_in:.2f} x {height_in:.2f} real units")
+        return {'FINISHED'}
+
+
+
 
 #_________________________classes from set measure apply
 class MESH_OT_add_scaled_plane(bpy.types.Operator):
@@ -387,7 +476,6 @@ class MESH_OT_toggle_edge_length(Operator):
 
         return {'FINISHED'}
 
-
 class VIEW3D_OT_snap_cursor_to_selected(bpy.types.Operator):
     bl_idname = "view3d.snap_cursor_quick"
     bl_label = "Snap Cursor to Selected"
@@ -631,17 +719,28 @@ class SCENE_OT_CartonScene(bpy.types.Operator):
             if sc.name == _name:
                 return {'FINISHED'}
 
+        # Store selection before creating scene
+        selected_objects = context.selected_objects.copy()
+
+        # Create new scene
         bpy.ops.scene.new(type='NEW')
-        context.scene.name = _name
-       
-       
-        #set to top view
+        new_scene = context.scene
+        new_scene.name = _name
+
+        # Link selected objects into the new scene
+        if selected_objects:
+            for obj in selected_objects:
+                if obj.name not in new_scene.collection.objects:
+                    new_scene.collection.objects.link(obj)
+
+        # Set to top view
         bpy.ops.view3d.view_axis(type='TOP', align_active=True)
-        #set to Cycles
-        bpy.context.scene.render.engine = 'CYCLES'
-        bpy.context.scene.display_settings.display_device = 'sRGB'
-        bpy.context.scene.view_settings.view_transform = 'Filmic'
-        bpy.context.scene.view_settings.look = 'Very High Contrast'
+        
+        # Set to Cycles with desired settings
+        new_scene.render.engine = 'CYCLES'
+        new_scene.display_settings.display_device = 'sRGB'
+        new_scene.view_settings.view_transform = 'Filmic'
+        new_scene.view_settings.look = 'Very High Contrast'
 
         return {'FINISHED'}
 
@@ -888,308 +987,6 @@ class SCENE_OT_full_render(bpy.types.Operator):
 
 
 
-
-
-
-################## add Scene Unit Choice
-
-    
-class SCENE_OT_scene_unit(bpy.types.Operator):
-    """Toggle Metric or Imperial"""
-    bl_idname = "scene.scene_unit"
-    bl_label = "Toggle Unit"
-    bl_options = { 'REGISTER', 'UNDO' }
-    
-
-
-    def execute(self, context):
-        
-        
-        #updated for copy from set measure apply improvement
-        
-        if bpy.context.scene.unit_settings.length_unit == 'MILLIMETERS':
-            bpy.context.scene.unit_settings.system = 'IMPERIAL'
-            bpy.context.scene.unit_settings.length_unit = 'INCHES'
-            bpy.context.space_data.overlay.grid_subdivisions = 12
-            bpy.context.scene.unit_settings.scale_length = 0.0833
-
-            
-        else:
-            bpy.context.scene.unit_settings.system = 'METRIC'
-            bpy.context.scene.unit_settings.length_unit = 'MILLIMETERS'
-            bpy.context.space_data.overlay.grid_subdivisions = 10 
-            bpy.context.space_data.overlay.grid_scale = 0.1
-
-            bpy.context.scene.unit_settings.scale_length = 0.001
-        
-        bpy.context.scene.tool_settings.use_snap = True
-        bpy.context.scene.tool_settings.snap_elements_base = {'GRID'}
-
-        
-        return {'FINISHED'}
-    
-############################### need to rewrite for toggle on single button :D
-
-class OBJECT_OT_front_mapping(bpy.types.Operator):
-    """Project selected face to UV Map in UV Editor using Shift \
-     to Front View and Project"""
-    bl_idname = "object.unwrap_front"
-    bl_label = "Unwrap Project Front"
-    bl_options = {'REGISTER', 'UNDO'}
-
-    @classmethod
-    def poll(cls, context):
-        return context.active_object is not None
-
-    def execute(self, context):
-        scene = context.scene
-        # new code
-        bpy.ops.view3d.view_persportho()
-        bpy.ops.view3d.view_axis(type='FRONT')
-        bpy.ops.view3d.view_selected()
-        bpy.ops.uv.project_from_view(camera_bounds=True,
-                                     correct_aspect=True,
-                                     scale_to_bounds=False)
-        return {'FINISHED'}
-
-
-class OBJECT_OT_back_mapping(bpy.types.Operator):
-    """Project selected face to UV Map in UV Editor using Shift \
-    to Back View and Project"""
-    bl_idname = "object.unwrap_back"
-    bl_label = "Unwrap Project Back"
-    bl_options = {'REGISTER', 'UNDO'}
-
-    @classmethod
-    def poll(cls, context):
-        return context.active_object is not None
-
-    def execute(self, context):
-        scene = context.scene
-        # new code
-        bpy.ops.view3d.view_persportho()
-        bpy.ops.view3d.view_axis(type='BACK')
-        bpy.ops.view3d.view_selected()
-        bpy.ops.uv.project_from_view(camera_bounds=True,
-                                     correct_aspect=True,
-                                     scale_to_bounds=False)
-        return {'FINISHED'}
-
-
-class OBJECT_OT_top_mapping(bpy.types.Operator):
-    """Project selected face to UV Map in UV Editor using Shift \
-     to Top View and Project"""
-    bl_idname = "object.unwrap_top"
-    bl_label = "Unwrap Project Top"
-    bl_options = {'REGISTER', 'UNDO'}
-
-    @classmethod
-    def poll(cls, context):
-        return context.active_object is not None
-
-    def execute(self, context):
-        scene = context.scene
-
-        bpy.ops.view3d.view_persportho()
-        bpy.ops.view3d.view_axis(type='TOP')
-        bpy.ops.view3d.view_selected()
-        bpy.ops.uv.project_from_view(camera_bounds=True,
-                                     correct_aspect=True,
-                                     scale_to_bounds=False)
-        return {'FINISHED'}
-
-
-class OBJECT_OT_bottom_mapping(bpy.types.Operator):
-    """Project selected face to UV Map in UV Editor using Shift \
-     to Bottom View and Project"""
-    bl_idname = "object.unwrap_bottom"
-    bl_label = "Unwrap Project Bottom"
-    bl_options = {'REGISTER', 'UNDO'}
-
-    @classmethod
-    def poll(cls, context):
-        return context.active_object is not None
-
-    def execute(self, context):
-        scene = context.scene
-
-        bpy.ops.view3d.view_persportho()
-        bpy.ops.view3d.view_axis(type='BOTTOM')
-        bpy.ops.view3d.view_selected()
-        bpy.ops.uv.project_from_view(camera_bounds=True,
-                                     correct_aspect=True,
-                                     scale_to_bounds=False)
-        return {'FINISHED'}
-
-
-class OBJECT_OT_left_mapping(bpy.types.Operator):
-    """Project selected face to UV Map in UV Editor using Shift \
-    to Left View and Project"""
-    bl_idname = "object.unwrap_left"
-    bl_label = "Unwrap Project Left"
-    bl_options = {'REGISTER', 'UNDO'}
-
-    @classmethod
-    def poll(cls, context):
-        return context.active_object is not None
-
-    def execute(self, context):
-        scene = context.scene
-
-        bpy.ops.view3d.view_persportho()
-        bpy.ops.view3d.view_axis(type='LEFT')
-        bpy.ops.view3d.view_selected()
-        bpy.ops.uv.project_from_view(camera_bounds=True,
-                                     correct_aspect=True,
-                                     scale_to_bounds=False)
-        return {'FINISHED'}
-
-
-class OBJECT_OT_right_mapping(bpy.types.Operator):
-    """Project selected face to UV Map in UV Editor using Shift \
-    to Right View and Project"""
-    bl_idname = "object.unwrap_right"
-    bl_label = "Unwrap Project Right"
-    bl_options = {'REGISTER', 'UNDO'}
-
-    @classmethod
-    def poll(cls, context):
-        return context.active_object is not None
-
-    def execute(self, context):
-        scene = context.scene
-        # new code
-        bpy.ops.view3d.view_persportho()
-        bpy.ops.view3d.view_axis(type='RIGHT')
-        bpy.ops.view3d.view_selected()
-        bpy.ops.uv.project_from_view(camera_bounds=True,
-                                     correct_aspect=True,
-                                     scale_to_bounds=False)
-        return {'FINISHED'}
-
-
-class CARTONVIZ_PG_add_object_helper(bpy.types.PropertyGroup):
-    carton_obj_name: bpy.props.StringProperty(
-        name="Name",
-        description="Name for Generated Object and Collection",
-    )
-    carton_obj_name_flag: bpy.props.BoolProperty(
-        name="Include units",
-        description="Add units to name",
-        default=False,
-    )
-    carton_obj_dimensions: bpy.props.FloatVectorProperty(
-        name="Dims",
-        description="Dimensions at unit scale",
-        soft_min=0,
-        soft_max=1000,
-        default=(1, 1, 1),
-        precision=16,
-    )
-    carton_enum_objs: bpy.props.EnumProperty(
-        name="Add",
-        description="Primitives to Add",
-        items=[
-            ("MESH_PLANE", "Plane", "primitive_plane_add"),
-            ("MESH_CUBE", "Cube", "primitive_cube_add")
-        ],
-    )
-    carton_enum_unit: bpy.props.EnumProperty(
-        name="Units",
-        description="Measurements for Use in Scene and Object",
-        items=[
-            ('UN1', "Millimeters mm", ""),
-            ('UN2', "Inches IN", ""),
-        ]
-    )
-
-
-class CARTONVIZ_OT_AddStart(bpy.types.Operator):
-    bl_label = "Add Object"
-    bl_idname = "cartonviz.myop_operator"
-
-    item_type: bpy.props.StringProperty(
-        name="Mesh Primitive",
-        description="Type of mesh primitive to add",
-        default="primitive_plane_add",
-    )
-    item_dimensions: bpy.props.FloatVectorProperty(
-        name="Dimensions",
-        description="Dimensions at unit scale",
-        soft_min=0,
-        soft_max=1000,
-        default=(1, 1, 1),
-        precision=16,
-    )
-    item_name: bpy.props.StringProperty(
-        name="Name",
-        description="Name for Generated Object",
-    )
-
-    @classmethod
-    def poll(cls, context):
-        return context.area.type == 'VIEW_3D'
-
-    def execute(self, context):
-        scalable_objs = [
-            "primitive_cube_add",
-            "primitive_uv_sphere_add",
-            "primitive_cylinder_add",
-            "primitive_cone_add",
-        ]
-        x, y, z = unit_conversion(context, Vector(self.item_dimensions))
-        if self.item_type in scalable_objs:
-            cmd = f"bpy.ops.mesh.{self.item_type}(scale=({x}, {y}, {z}))"
-            eval(cmd)
-        else:
-            cmd = f"bpy.ops.mesh.{self.item_type}()"
-            eval(cmd)
-            ob = context.view_layer.objects.active
-            ob.dimensions = Vector((x, y, z)) * 2
-            bpy.ops.object.transform_apply(location=False, 
-                                rotation=False, scale=True)
-
-        # Set the name of the generated object
-        context.view_layer.objects.active.name = self.item_name
-
-        # Make the generated object a child of "ref_dieline_proxy"
-        generated_object = bpy.data.objects.get(self.item_name)
-        parent_object = bpy.data.objects.get("ref_dieline_proxy")
-
-        if generated_object and parent_object:
-            generated_object.parent = parent_object
-            print(f"'{self.item_name}' is now parented to 'ref_dieline_proxy'.")
-
-        bpy.ops.transform.translate(value=(0, 0, 4.68563e-05))
-
-        return {'FINISHED'}
-
-
-class CARTONVIZ_OT_my_collection(bpy.types.Operator):
-    bl_label = "Add to Collection"
-    bl_idname = "cartonviz.my_collection"
-    bl_options = {'REGISTER', 'UNDO'}
-
-    coll_name: bpy.props.StringProperty(
-        name="Name",
-        description="Name for Generated Collection",
-    )
-
-    @classmethod
-    def poll(cls, context):
-        return context.active_object is not None
-
-    def execute(self, context):
-        scene = context.scene
-        mytool = scene.my_tool
-        context.selected_objects
-        bpy.ops.object.move_to_collection(
-            collection_index=0,
-            is_new=True,
-            new_collection_name=self.coll_name)
-        return {'FINISHED'}
-
-
 class OBJECT_OT_add_bevel(bpy.types.Operator):
     """Applies Scale and Adds Bevel Modifier to 3D Carton Base"""
     bl_idname = "object.add_bevel"
@@ -1404,20 +1201,6 @@ class OBJECT_OT_cardboard(bpy.types.Operator):
         return {'FINISHED'}
 
 
-import bpy
-
-def get_image_from_object(obj):
-    """Get the first image texture from the object's material slots."""
-    if obj.type != 'MESH':
-        return None
-    for mat in obj.data.materials:
-        if mat and mat.use_nodes:
-            for node in mat.node_tree.nodes:
-                if node.type == 'TEX_IMAGE' and node.image:
-                    return node.image
-    return None
-
-
 class OBJECT_OT_Cameraview_model(bpy.types.Operator):
     """Set up Camera to match and follow selected image plane"""
     bl_idname = "image.cameraview_model"
@@ -1512,18 +1295,6 @@ class OBJECT_OT_Cameraview_model(bpy.types.Operator):
 
         self.report({'INFO'}, f"Camera matched to {width_world:.2f} x {height_world:.2f} world units.")
         return {'FINISHED'}
-
-
-# Registration
-def register():
-    bpy.utils.register_class(OBJECT_OT_Cameraview_model)
-
-def unregister():
-    bpy.utils.unregister_class(OBJECT_OT_Cameraview_model)
-
-if __name__ == "__main__":
-    register()
-
 
 
 class CARTONVIZ_OT_add_basic(bpy.types.Operator):
@@ -1894,10 +1665,9 @@ class OBJECT_OT_snap_and_realign(bpy.types.Operator):
 
         return {'FINISHED'}
 
-
-class CARTONVIZ_PT_main_panel(bpy.types.Panel):
-    bl_label = "Carton Primitive Panel"
-    bl_idname = "cartonviz_PT_main_panel"
+class VIEW3D_PT_carton_creation(Panel):
+    bl_label = "Carton Creation"
+    bl_idname = "VIEW3D_PT_carton_creation"
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'UI'
     bl_category = "Carton Viz"
@@ -1905,14 +1675,16 @@ class CARTONVIZ_PT_main_panel(bpy.types.Panel):
 
     def draw(self, context):
         layout = self.layout
-        scene = context.scene
-        mytool = scene.my_tool
-        box = layout.box()
-        col = box.column(align=True)
-        col.label(text="Carton Building Starts Here")
-        row = col.row(align=True)
-        
+        obj = context.object
+        units = bpy.context.scene.unit_settings.system
 
+        props = context.scene.sel_props
+        tool_settings = context.tool_settings
+        
+        box = layout.box()  # big buttons aligned
+        col = box.column(align=True)
+        col.label(text='Initial Dieline to Camera/Scene')
+        row = col.row(align=True)
         row1 = row.split(align=True)
         row1.scale_x = 0.50
         row1.scale_y = 1.25
@@ -1933,153 +1705,6 @@ class CARTONVIZ_PT_main_panel(bpy.types.Panel):
         row3.operator("cpv.create_cpv_scene",
                         text="New Scene",
                         icon='PREFERENCES')
-        
-        scunit = bpy.context.scene.unit_settings.system
-        
-        if scunit == 'METRIC':
-            toggle = "Scene is Metric"
-            scicon = "URL"
-        elif scunit == 'IMPERIAL':
-            toggle = "Scene is Imperial"
-            scicon = "HOOK"
-
-        
-        row3.operator("scene.scene_unit",
-                      text=toggle,
-                      icon=scicon)
-        
-        
-
-        col = layout.column()
-        col.prop(mytool, "carton_enum_unit")
-        row = layout.row()
-        row.prop(mytool, "carton_obj_dimensions")
-        row = layout.row()
-        row.prop(mytool, "carton_obj_name")
-        row.prop(mytool, "carton_obj_name_flag")
-        col = layout.column()
-        if not mytool.carton_obj_name_flag:
-            obj_name = mytool.carton_obj_name
-        else:
-            s = Template(
-                "${obj_name} ${x_dim} ${unit} x ${y_dim}\
-                 ${unit} x ${z_dim} ${unit}"
-            )
-            if mytool.carton_enum_unit == "UN1":
-                obj_name = s.substitute(
-                    obj_name=mytool.carton_obj_name,
-                    x_dim=mytool.carton_obj_dimensions[0],
-                    unit="mm",
-                    y_dim=mytool.carton_obj_dimensions[1],
-                    z_dim=mytool.carton_obj_dimensions[2])
-            else:
-                obj_name = s.substitute(
-                    obj_name=mytool.carton_obj_name,
-                    x_dim=mytool.carton_obj_dimensions[0],
-                    unit="IN",
-                    y_dim=mytool.carton_obj_dimensions[1],
-                    z_dim=mytool.carton_obj_dimensions[2])
-        col.label(text=f"ex: {obj_name}")
-        items = mytool.bl_rna.properties['carton_enum_objs'].enum_items
-        enum = items[mytool.carton_enum_objs]
-        col.prop(
-            mytool,
-            "carton_enum_objs",
-            text="Object type",
-            icon=enum.identifier)
-
-        make_obj = col.operator(
-            "cartonviz.myop_operator",
-            text=enum.name,
-            icon=enum.identifier)
-        make_obj.item_type = enum.description
-
-        make_obj.item_dimensions = mytool.carton_obj_dimensions
-        make_obj.item_name = obj_name
-
-        make_coll = col.operator("cartonviz.my_collection")
-        make_coll.coll_name = obj_name
-        
-        col.operator("object.snap_and_realign",
-                     text="Snap to World",
-                     icon='WORLD_DATA')
-
-        box = layout.box()
-        col = box.column(align=True)
-        col.label(text="Extras for Modeling")
-        row = layout.row()
-        row = col.row(align=True)
-        row.scale_x = 0.50
-        row.scale_y = 1.25
-        row3 = row.split(align=True)
-        row3.operator("object.wire_draw",
-                      text="Wire",
-                      icon='MOD_SOLIDIFY')
-                      
-        if bpy.context.scene.tool_settings.transform_pivot_point == 'CURSOR':
-            pivot = 'PIVOT_CURSOR'
-        elif bpy.context.scene.tool_settings.transform_pivot_point == 'MEDIAN_POINT':
-            pivot = 'PIVOT_MEDIAN'
-        else:
-            pivot='ERROR'
-
-
-        row3.operator("scene.pivot",
-                      text="Pivot",
-                      icon=pivot)
-
-        row = layout.row()
-        row = col.row(align=True)
-        row.scale_x = 0.50
-        row.scale_y = 1.25
-        # row = row.split(align=False)
-        row.operator("object.center_mirror",
-                     text="Add Mirror",
-                     icon='ORIENTATION_VIEW')
-        row.operator("object.apply_xmirror",
-                     text="XMirror",
-                     icon='MOD_MIRROR')
-
-
-def unit_conversion(context, item_dims):
-    scene = context.scene
-    mytool = scene.my_tool
-    # divide by 2 since items are created based on radius dimensions
-    # also variable for sphere is listed as radius but cube is listed as size
-    item_dims = item_dims / 2
-
-    # since the operation of bpy.ops.mesh.primitive_xx_add
-    # is based on a 1 meter scale always
-    # conversion is only based on the unit selection
-    # in the enumerator property
-
-    # metric to mm conversions (1m = 1000mm)
-    if mytool.carton_enum_unit == 'UN1':
-        item_dims = item_dims / 1000
-
-    # imperial to IN conversions (1m = 39.36in)
-    if mytool.carton_enum_unit == 'UN2':
-        item_dims = item_dims / 39.36
-    return item_dims
-
-
-#_________________________imported panel parts
-
-class VIEW3D_PT_set_edge_length(Panel):
-    bl_label = "Set Measure Apply"
-    bl_idname = "VIEW3D_PT_set_edge_length"
-    bl_space_type = 'VIEW_3D'
-    bl_region_type = 'UI'
-    bl_category = "Carton Viz"
-    bl_options = {'DEFAULT_CLOSED'}
-
-    def draw(self, context):
-        layout = self.layout
-        obj = context.object
-        units = bpy.context.scene.unit_settings.system
-
-        props = context.scene.sel_props
-        tool_settings = context.tool_settings
 
         box = layout.box()  # big buttons aligned
         col = box.column(align=True)
@@ -2137,17 +1762,7 @@ class VIEW3D_PT_set_edge_length(Panel):
                   text="Auto Merge",
                   toggle=False)
 
-        row = col.row(align=True)
-        row2 = row.split(align=True)
-        row2.scale_x = 0.50
-        row2.scale_y = 1.25
-        # row2.operator("render.render")
-        row2.operator("view3d.toggle_wire",
-                      text="Toggle Display Wire",
-                      icon='MESH_GRID')
-        row2.operator("mesh.apply_scale",
-                      text="Apply Scale",
-                      icon='FILE_3D')
+        
 
         box = layout.box()  # big buttons aligned
         col = box.column(align=True)
@@ -2181,6 +1796,69 @@ class VIEW3D_PT_set_edge_length(Panel):
 
         row2.operator("mesh.add_scaled_plane", icon='UV_ISLANDSEL')
         # op.join_to_edit_object = True
+        
+        col = layout.column()
+        box = layout.box()
+        col = box.column(align=True)
+        col.label(text="Extras for Modeling")
+        row = layout.row()
+        row = col.row(align=True)
+        row.scale_x = 0.50
+        row.scale_y = 1.25
+        row = row.split(align=True)
+        row.operator("object.wire_draw",
+                      text="Wire Transparency",
+                      icon='MOD_SOLIDIFY')
+        
+        row = row.split(align=True)
+        row.scale_x = 0.50
+        row.scale_y = 1.25
+        
+        row.operator("view3d.toggle_wire",
+                      text="Toggle Show Edges",
+                      icon='MESH_GRID')
+        row = layout.row()
+        row = col.row(align=True)
+        row.scale_x = 0.50
+        row.scale_y = 1.25
+        row = row.split(align=True)
+        row.operator("mesh.apply_scale",
+                      text="Apply Scale",
+                      icon='FILE_3D')
+        
+        row.scale_x = 0.50
+        row.scale_y = 1.25
+        row = row.split(align=True)
+        row.operator("object.snap_and_realign",
+                     text="Snap to World",
+                     icon='WORLD_DATA')
+                      
+        if bpy.context.scene.tool_settings.transform_pivot_point == 'CURSOR':
+            pivot = 'PIVOT_CURSOR'
+        elif bpy.context.scene.tool_settings.transform_pivot_point == 'MEDIAN_POINT':
+            pivot = 'PIVOT_MEDIAN'
+        else:
+            pivot='ERROR'
+
+        row = col.row(align=True)
+        row.scale_x = 0.50
+        row.scale_y = 1.25
+        row = row.split(align=True)
+        row.operator("scene.pivot",
+                      text="Pivot Cursor/Median",
+                      icon=pivot)
+
+        row = layout.row()
+        row = col.row(align=True)
+        row.scale_x = 0.50
+        row.scale_y = 1.25
+        # row = row.split(align=False)
+        row.operator("object.center_mirror",
+                     text="Add Mirror",
+                     icon='ORIENTATION_VIEW')
+        row.operator("object.apply_xmirror",
+                     text="XMirror",
+                     icon='MOD_MIRROR')
 
         box = layout.box()  # big buttons aligned
         col = box.column(align=True)
@@ -2203,9 +1881,55 @@ class VIEW3D_PT_set_edge_length(Panel):
                       icon='MOD_BEVEL')
 
 
-# ------------------------------------
-# UI Panel
-# ------------------------------------
+# ---------- Panel ----------
+class VIEW3D_PT_dpi_scaler(bpy.types.Panel):
+    bl_label = "Image Plane DPI Scaler"
+    bl_space_type = 'VIEW_3D'
+    bl_region_type = 'UI'
+    bl_category = "Carton Viz"
+    bl_options = {'DEFAULT_CLOSED'}
+
+    def draw(self, context):
+        layout = self.layout
+        scene = context.scene
+        props = scene.dpi_scaler_props
+        obj = context.active_object
+        unit_system = scene.unit_settings.system
+        scale_length = scene.unit_settings.scale_length
+
+        layout.prop(props, "dpi")
+
+        if obj and obj.type == 'MESH':
+            image = get_image_from_object(obj)
+            if image:
+                width_px, height_px = image.size
+                dpi = props.dpi
+
+                width_in = width_px / dpi
+                height_in = height_px / dpi
+
+                if unit_system == 'IMPERIAL':
+                    inches_per_BU = scale_length * 39.3701
+                    target_width_BU = width_in / inches_per_BU
+                    target_height_BU = height_in / inches_per_BU
+                    layout.label(text=f"Target Size: {width_in:.2f}\" x {height_in:.2f}\"")
+                elif unit_system == 'METRIC':
+                    mm_per_BU = scale_length * 1000
+                    target_width_BU = (width_in * 25.4) / mm_per_BU
+                    target_height_BU = (height_in * 25.4) / mm_per_BU
+                    layout.label(text=f"Target Size: {width_in*25.4:.2f}mm x {height_in*25.4:.2f}mm")
+                else:
+                    target_width_BU = (width_in * 0.0254) / scale_length
+                    target_height_BU = (height_in * 0.0254) / scale_length
+                    layout.label(text=f"Target Size: {width_in*25.4:.2f}mm x {height_in*25.4:.2f}mm")
+
+                layout.label(text=f"Blender Units: {target_width_BU:.3f} x {target_height_BU:.3f}")
+                layout.operator("object.scale_image_plane_dpi", text="Apply Scaling")
+            else:
+                layout.label(text="No image found on selected object.")
+        else:
+            layout.label(text="Select an image plane.")
+
 class VIEW3D_PT_knockout_panel(bpy.types.Panel):
     bl_label = "Knock-Out Cutter"
     bl_idname = "VIEW3D_PT_knockout_panel"
@@ -2256,70 +1980,15 @@ class VIEW3D_PT_knockout_panel(bpy.types.Panel):
         row2.scale_y = 1.25
         row2.operator("object.tag_as_cutter", icon='FONT_DATA')
 
-    #_________________________end of imported panels
 
 
-class CARTONVIZ_PT_CartonUVMapping(bpy.types.Panel):
-    """Carton Mapping Tools"""
-    bl_label = "Carton UV Mapping Tools"
-    bl_idname = "cartonviz_PT_CartonMapping"
-    bl_space_type = "VIEW_3D"
-    bl_region_type = "UI"
-    bl_category = "Carton Viz"
-    bl_options = {'DEFAULT_CLOSED'}
 
-    def draw(self, context):
-        layout = self.layout
 
-        box = layout.box()  # big buttons aligned
-        col = box.column(align=True)
-        col.label(text='Project Each Face for Mapping')
-
-        row = col.row(align=True)
-        row1 = row.split(align=True)
-        row1.scale_x = 0.50
-        row1.scale_y = 1.25
-        row1.operator("object.unwrap_front", text="Front")
-        row2 = row.split(align=True)
-        row2.scale_x = 0.50
-        row2.scale_y = 1.25
-        row2.operator("object.unwrap_back", text="Back")
-        col = box.column(align=True)
-        row1 = row.split(align=True)
-        row1.scale_x = 0.50
-        row1.scale_y = 1.25
-        row1.operator("object.unwrap_top", text="Top")
-
-        row2 = row.split(align=True)
-        row2.scale_x = 0.50
-        row2.scale_y = 1.25
-        row2.operator("object.unwrap_bottom", text="Bottom")
-
-        row = col.row(align=True)
-        row1 = row.split(align=True)
-        row1.scale_x = 0.50
-        row1.scale_y = 1.25
-        row1.operator("object.unwrap_left",
-                      text="Left",
-                      icon='PREV_KEYFRAME')
-
-        row2 = row.split(align=True)
-        row2.scale_x = 0.50
-        row2.scale_y = 1.25
-        row2.operator("object.unwrap_right",
-                      text="Right",
-                      icon='NEXT_KEYFRAME')
-        row3 = row.split(align=True)
-        row3.scale_x = 0.50
-        row3.scale_y = 1.25
-        row3.operator("object.select_project",
-                      text="Flat Project",
-                      icon='ZOOM_PREVIOUS')
 
 
 class CARTONVIZ_PT_CartonFinishing(bpy.types.Panel):
-    """Carton Finishing Tools"""
-    bl_label = "Carton Finishing Tools"
+    """Carton Finishing"""
+    bl_label = "Carton Finishing"
     bl_idname = "cartonviz_PT_CartonFinishing"
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
@@ -2335,7 +2004,14 @@ class CARTONVIZ_PT_CartonFinishing(bpy.types.Panel):
         col.label(text='Presets for Prep of Final Products')
 
         row = col.row(align=True)
-
+        
+        row3 = row.split(align=True)
+        row3.scale_x = 0.50
+        row3.scale_y = 1.25
+        row3.operator("object.select_project",
+                      text="Flat Project through Diecam",
+                      icon='ZOOM_PREVIOUS')
+        row = col.row(align=True)
         row1 = row.split(align=True)
         row1.scale_x = 0.50
         row1.scale_y = 1.25
@@ -2379,8 +2055,8 @@ class CARTONVIZ_PT_CartonFinishing(bpy.types.Panel):
         
 
 class CARTONVIZ_PT_SceneRendering(bpy.types.Panel):
-    """Carton Rendering Tools"""
-    bl_label = "Carton Rendering Tools"
+    """Carton Rendering"""
+    bl_label = "Carton Rendering"
     bl_idname = "cartonviz_PT_CartonRendering"
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
@@ -2443,22 +2119,10 @@ class CARTONVIZ_PT_SceneRendering(bpy.types.Panel):
                       icon='RENDER_ANIMATION')
 
 
-
+#_______________________register and class
 classes = [
-    CARTONVIZ_PG_add_object_helper,
-    CARTONVIZ_PT_main_panel,
-    CARTONVIZ_OT_AddStart,
-    CARTONVIZ_OT_my_collection,
-    SCENE_OT_scene_unit,
-    OBJECT_OT_front_mapping,
-    OBJECT_OT_back_mapping,
-    OBJECT_OT_top_mapping,
-    OBJECT_OT_bottom_mapping,
-    OBJECT_OT_left_mapping,
-    OBJECT_OT_right_mapping,
-    OBJECT_OT_add_bevel,
-    CARTONVIZ_PT_CartonUVMapping,
-    CARTONVIZ_PT_CartonFinishing,
+    
+    OBJECT_OT_add_bevel,    
     OBJECT_OT_wire_draw,
     OBJECT_OT_apply_xmirror,
     OBJECT_OT_select_project,
@@ -2474,8 +2138,7 @@ classes = [
     SCENE_OT_full_render,
     SCENE_OT_pose_frames,
     SCENE_OT_playblast_fullrender,
-    SCENE_OT_camera_targetrender,
-    CARTONVIZ_PT_SceneRendering,
+    SCENE_OT_camera_targetrender,    
     SCENE_OT_CartonScene,
     OBJECT_OT_snap_and_realign,
     KnockoutProperties,
@@ -2492,8 +2155,14 @@ classes = [
     MESH_OT_add_edge_to_edit_mesh,
     MESH_OT_add_scaled_plane,
     OBJECT_OT_tag_as_cutter,
-    VIEW3D_PT_set_edge_length,
-    VIEW3D_PT_knockout_panel
+    VIEW3D_PT_carton_creation,
+    VIEW3D_PT_knockout_panel,
+    DPIScalerProperties,
+    OBJECT_OT_scale_image_plane,
+    VIEW3D_PT_dpi_scaler,
+    CARTONVIZ_PT_CartonFinishing,
+    CARTONVIZ_PT_SceneRendering,
+    
     
 ]
 
@@ -2501,11 +2170,11 @@ classes = [
 def register():
     for cls in classes:
         bpy.utils.register_class(cls)
-    bpy.types.Scene.my_tool = bpy.props.PointerProperty(
-        type=CARTONVIZ_PG_add_object_helper)
+    
 
     bpy.types.Scene.sel_props = PointerProperty(type=SELProperties)
     bpy.types.Scene.knockout_props = bpy.props.PointerProperty(type=KnockoutProperties)
+    bpy.types.Scene.dpi_scaler_props = bpy.props.PointerProperty(type=DPIScalerProperties)
 
     wm = bpy.context.window_manager
     kc = wm.keyconfigs.addon
@@ -2521,9 +2190,10 @@ def register():
 def unregister():
     for cls in classes:
         bpy.utils.unregister_class(cls)
-    del bpy.types.Scene.my_tool
+    
     del bpy.types.Scene.sel_props
     del bpy.types.Scene.knockout_props
+    del bpy.types.Scene.dpi_scaler_props
 
     wm = bpy.context.window_manager
     kc = wm.keyconfigs.addon
