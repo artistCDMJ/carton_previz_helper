@@ -1685,6 +1685,21 @@ class VIEW3D_PT_carton_creation(Panel):
         col = box.column(align=True)
         col.label(text='Initial Dieline to Camera/Scene')
         row = col.row(align=True)
+
+        row1 = row.split(align=True)
+        row1.scale_x = 0.50
+        row1.scale_y = 1.25
+
+        if units == 'METRIC':
+            row1.operator("view3d.metric_imperial_setup",
+                          text="Set Imperial",
+                          icon='FULLSCREEN_EXIT')
+
+        else:
+            row1.operator("view3d.metric_imperial_setup",
+                          text="Set Metric",
+                          icon='FULLSCREEN_ENTER')
+        row = col.row(align=True)
         row1 = row.split(align=True)
         row1.scale_x = 0.50
         row1.scale_y = 1.25
@@ -1710,21 +1725,7 @@ class VIEW3D_PT_carton_creation(Panel):
         col = box.column(align=True)
         col.label(text='Edge Settings')
 
-        row = col.row(align=True)
-
-        row1 = row.split(align=True)
-        row1.scale_x = 0.50
-        row1.scale_y = 1.25
-
-        if units == 'METRIC':
-            row1.operator("view3d.metric_imperial_setup",
-                          text="Set Imperial",
-                          icon='FULLSCREEN_EXIT')
-
-        else:
-            row1.operator("view3d.metric_imperial_setup",
-                          text="Set Metric",
-                          icon='FULLSCREEN_ENTER')
+        
 
         row2 = row.split(align=True)
         row2.scale_x = 0.50
