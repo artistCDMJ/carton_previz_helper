@@ -33,7 +33,7 @@ from bpy.props import FloatProperty, PointerProperty, EnumProperty, IntProperty,
 
 bl_info = {"name": "Carton Viz Helper",
            "author": "CDMJ",
-           "version": (3, 50, 7),
+           "version": (3, 50, 8),
            "blender": (4, 5, 1),
            "location": "N-Panel > Carton Viz",
            "description": "CDMJ In-House Carton PreViz Helper Tool",
