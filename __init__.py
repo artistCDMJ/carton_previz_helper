@@ -68,6 +68,18 @@ def get_image_from_object(obj):
 
 #_______________________Property Type
 
+class CartonCADMirrorProperties(PropertyGroup):
+    mirror_axis: EnumProperty(
+        name="Axis",
+        description="Choose mirror axis",
+        items=[
+            ('X', "X", "Mirror across X axis"),
+            ('Y', "Y", "Mirror across Y axis"),
+            ('Z', "Z", "Mirror across Z axis")
+        ],
+        default='X'
+    )
+    
 ##____________________DPI_CORRECTION
 # ---------- Property Group ----------
 class DPIScalerProperties(bpy.types.PropertyGroup):
@@ -162,6 +174,52 @@ class KnockoutProperties(bpy.types.PropertyGroup):
 
 #_______________________Operator Type
 
+class CARTON_OT_snap_cursor_set_pivot(Operator):
+    """Snap Cursor to Selection and Set Pivot"""
+    bl_idname = "carton.snap_cursor_set_pivot"
+    bl_label = "Snap Cursor & Set Pivot"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    @classmethod
+    def poll(cls, context):
+        return (context.object is not None and
+                context.object.mode == 'EDIT' and
+                context.object.type == 'MESH')
+
+    def execute(self, context):
+        bpy.ops.view3d.snap_cursor_to_selected()
+        bpy.context.scene.tool_settings.transform_pivot_point = 'CURSOR'
+        self.report({'INFO'}, "Cursor snapped to selection and pivot set to cursor.")
+        return {'FINISHED'}
+
+
+class CARTON_OT_mirror_to_cursor(Operator):
+    """Duplicate and Mirror Selection on Chosen Axis"""
+    bl_idname = "carton.mirror_to_cursor"
+    bl_label = "Mirror to Cursor"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    @classmethod
+    def poll(cls, context):
+        return (context.object is not None and
+                context.object.mode == 'EDIT' and
+                context.object.type == 'MESH')
+
+    def execute(self, context):
+        props = context.scene.carton_cad_mirror_props
+        axis = props.mirror_axis
+
+        # Duplicate the selected mesh
+        bpy.ops.mesh.duplicate_move()
+        
+        # Scale on chosen axis by -1
+        scale_dict = {'X': (-1, 1, 1), 'Y': (1, -1, 1), 'Z': (1, 1, -1)}
+        scale = scale_dict.get(axis, (1, 1, 1))
+        bpy.ops.transform.resize(value=scale)
+        
+        self.report({'INFO'}, f"Mirrored selection on {axis} axis.")
+        return {'FINISHED'}
+    
 # ---------- Operator ----------
 class OBJECT_OT_scale_image_plane(bpy.types.Operator):
     bl_idname = "object.scale_image_plane_dpi"
@@ -1860,7 +1918,7 @@ class VIEW3D_PT_carton_creation(Panel):
         row.operator("object.apply_xmirror",
                      text="XMirror",
                      icon='MOD_MIRROR')
-
+  
         box = layout.box()  # big buttons aligned
         col = box.column(align=True)
         col.label(text='Bevel Corner Vertex')
@@ -1880,7 +1938,34 @@ class VIEW3D_PT_carton_creation(Panel):
         # row2.operator("render.render")
         row2.operator("mesh.vertex_bevel_custom",
                       icon='MOD_BEVEL')
+                      
+# Mirror to Line CAD imitation
+class CARTON_PT_mirror_panel(Panel):
+    bl_label = "Carton CAD Mirror"
+    #bl_idname = "CARTON_PT_mirror_panel"
+    bl_space_type = 'VIEW_3D'
+    bl_region_type = 'UI'
+    bl_category = "Carton Viz"
+    bl_options = {'DEFAULT_CLOSED'}
 
+    def draw(self, context):
+        layout = self.layout
+        props = context.scene.carton_cad_mirror_props
+        obj = context.object
+
+        layout.label(text="Mirror Axis:")
+        row = layout.row(align=True)
+        row.prop(props, "mirror_axis", expand=True)
+
+        # Snap cursor and set pivot
+        col = layout.column(align=True)
+        col.enabled = obj and obj.mode == 'EDIT'
+        col.operator("carton.snap_cursor_set_pivot", icon='PIVOT_CURSOR')
+
+        # Mirror button
+        col = layout.column(align=True)
+        col.enabled = obj and obj.mode == 'EDIT'
+        col.operator("carton.mirror_to_cursor", icon='MOD_MIRROR')
 
 # ---------- Panel ----------
 class VIEW3D_PT_dpi_scaler(bpy.types.Panel):
@@ -2158,11 +2243,16 @@ classes = [
     OBJECT_OT_tag_as_cutter,
     VIEW3D_PT_carton_creation,
     VIEW3D_PT_knockout_panel,
+    CARTON_PT_mirror_panel,
     DPIScalerProperties,
     OBJECT_OT_scale_image_plane,
     VIEW3D_PT_dpi_scaler,
     CARTONVIZ_PT_CartonFinishing,
     CARTONVIZ_PT_SceneRendering,
+    CartonCADMirrorProperties,
+    CARTON_OT_snap_cursor_set_pivot,
+    CARTON_OT_mirror_to_cursor,
+    
     
     
 ]
@@ -2176,6 +2266,7 @@ def register():
     bpy.types.Scene.sel_props = PointerProperty(type=SELProperties)
     bpy.types.Scene.knockout_props = bpy.props.PointerProperty(type=KnockoutProperties)
     bpy.types.Scene.dpi_scaler_props = bpy.props.PointerProperty(type=DPIScalerProperties)
+    bpy.types.Scene.carton_cad_mirror_props = PointerProperty(type=CartonCADMirrorProperties)
 
     wm = bpy.context.window_manager
     kc = wm.keyconfigs.addon
@@ -2195,6 +2286,7 @@ def unregister():
     del bpy.types.Scene.sel_props
     del bpy.types.Scene.knockout_props
     del bpy.types.Scene.dpi_scaler_props
+    del bpy.types.Scene.carton_cad_mirror_props
 
     wm = bpy.context.window_manager
     kc = wm.keyconfigs.addon
