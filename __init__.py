@@ -31,27 +31,18 @@ from bpy.props import FloatProperty, PointerProperty, EnumProperty, IntProperty,
 # NON <pep8 compliant>
 ###############################################################################
 
-bl_info = {"name": "Carton Viz Helper",
+bl_info = {"name": "Carton CAD Helper",
            "author": "CDMJ",
-           "version": (3, 50, 8),
+           "version": (3, 51, 0),
            "blender": (4, 5, 1),
-           "location": "N-Panel > Carton Viz",
+           "location": "N-Panel > Carton CAD",
            "description": "CDMJ In-House Carton PreViz Helper Tool",
            "warning": "",
            "category": "Object"}
 
 #______________Functions
 
-# ---------- Helper ----------
-def get_image_from_object(obj):
-    if obj and obj.type == 'MESH':
-        for mat in obj.data.materials:
-            if mat and mat.node_tree:
-                for node in mat.node_tree.nodes:
-                    if node.type == 'TEX_IMAGE' and node.image:
-                        return node.image
-    return None
-
+# ---------- Helper ---------
 
 def get_image_from_object(obj):
     """Get the first image texture from the object's material slots."""
@@ -221,8 +212,8 @@ class CARTON_OT_mirror_to_cursor(Operator):
         return {'FINISHED'}
     
 # ---------- Operator ----------
-class OBJECT_OT_scale_image_plane(bpy.types.Operator):
-    bl_idname = "object.scale_image_plane_dpi"
+class CARTON_OT_scale_image_plane(bpy.types.Operator):
+    bl_idname = "carton.scale_image_plane_dpi"
     bl_label = "Scale Image Plane to DPI"
     bl_options = {'REGISTER', 'UNDO'}
 
@@ -1355,9 +1346,9 @@ class OBJECT_OT_Cameraview_model(bpy.types.Operator):
         return {'FINISHED'}
 
 
-class CARTONVIZ_OT_add_basic(bpy.types.Operator):
+class CARTONCAD_OT_add_basic(bpy.types.Operator):
     """Add Full Carton Base Shader Node Group to Selected Carton"""
-    bl_idname = "cartonviz.addbasic_operator"
+    bl_idname = "cartoncad.addbasic_operator"
     bl_label = "Carton Shader Base"
     bl_options = { 'REGISTER', 'UNDO' }
     
@@ -1456,9 +1447,9 @@ class CARTONVIZ_OT_add_basic(bpy.types.Operator):
         return {'FINISHED'}
 
 
-class CARTONVIZ_OT_add_fiberboard(bpy.types.Operator):
+class CARTONCAD_OT_add_fiberboard(bpy.types.Operator):
     """Applies a Procedural Fiberboard Texture to Solidy Surface"""    
-    bl_idname = "cartonviz.add_fiberboard"
+    bl_idname = "cartoncad.add_fiberboard"
     bl_label = "Carton Fiberboard Shader"
     bl_options = { 'REGISTER', 'UNDO'}
 
@@ -1575,9 +1566,9 @@ class CARTONVIZ_OT_add_fiberboard(bpy.types.Operator):
         return {'FINISHED'}
 
 
-class CARTONVIZ_OT_add_corrugate(bpy.types.Operator):
+class CARTONCAD_OT_add_corrugate(bpy.types.Operator):
     """Applies a Procedural Corrugate Texture to Solidify Surface"""
-    bl_idname = "cartonviz.add_corrugate"
+    bl_idname = "cartoncad.add_corrugate"
     bl_label = "Corrugate Shader"    
     bl_options = { 'REGISTER', 'UNDO'}
 
@@ -1728,7 +1719,7 @@ class VIEW3D_PT_carton_creation(Panel):
     bl_idname = "VIEW3D_PT_carton_creation"
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'UI'
-    bl_category = "Carton Viz"
+    bl_category = "Carton CAD"
     bl_options = {'DEFAULT_CLOSED'}
 
     def draw(self, context):
@@ -1764,6 +1755,51 @@ class VIEW3D_PT_carton_creation(Panel):
         row1.operator("image.import_as_mesh_planes",
                       text="Load Dieline",
                       icon='MESH_GRID')
+
+        #########import DPI here
+        layout = self.layout
+        scene = context.scene
+        dprops = scene.dpi_scaler_props
+        obj = context.active_object
+        unit_system = scene.unit_settings.system
+        scale_length = scene.unit_settings.scale_length
+
+        layout.prop(dprops, "dpi")
+
+        if obj and obj.type == 'MESH':
+            image = get_image_from_object(obj)
+            if image:
+                width_px, height_px = image.size
+                dpi = dprops.dpi
+
+                width_in = width_px / dpi
+                height_in = height_px / dpi
+
+                if unit_system == 'IMPERIAL':
+                    inches_per_BU = scale_length * 39.3701
+                    target_width_BU = width_in / inches_per_BU
+                    target_height_BU = height_in / inches_per_BU
+                    layout.label(text=f"Target Size: {width_in:.2f}\" x {height_in:.2f}\"")
+                elif unit_system == 'METRIC':
+                    mm_per_BU = scale_length * 1000
+                    target_width_BU = (width_in * 25.4) / mm_per_BU
+                    target_height_BU = (height_in * 25.4) / mm_per_BU
+                    layout.label(text=f"Target Size: {width_in*25.4:.2f}mm x {height_in*25.4:.2f}mm")
+                else:
+                    target_width_BU = (width_in * 0.0254) / scale_length
+                    target_height_BU = (height_in * 0.0254) / scale_length
+                    layout.label(text=f"Target Size: {width_in*25.4:.2f}mm x {height_in*25.4:.2f}mm")
+
+                layout.label(text=f"Blender Units: {target_width_BU:.3f} x {target_height_BU:.3f}")
+                layout.operator("carton.scale_image_plane_dpi", text="Apply Scaling")
+            else:
+                layout.label(text="No image found on selected object.")
+        else:
+            layout.label(text="Select an image plane.")
+
+
+
+
         row2 = row.split(align=True)
         row2.scale_x = 0.50
         row2.scale_y = 1.25
@@ -1940,12 +1976,11 @@ class VIEW3D_PT_carton_creation(Panel):
                       icon='MOD_BEVEL')
                       
 # Mirror to Line CAD imitation
-class CARTON_PT_mirror_panel(Panel):
-    bl_label = "Carton CAD Mirror"
-    #bl_idname = "CARTON_PT_mirror_panel"
+class VIEW3D_PT_mirror_panel(Panel):
+    bl_label = "CAD Mirror on Cursor"
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'UI'
-    bl_category = "Carton Viz"
+    bl_category = "Carton CAD"
     bl_options = {'DEFAULT_CLOSED'}
 
     def draw(self, context):
@@ -1967,61 +2002,14 @@ class CARTON_PT_mirror_panel(Panel):
         col.enabled = obj and obj.mode == 'EDIT'
         col.operator("carton.mirror_to_cursor", icon='MOD_MIRROR')
 
-# ---------- Panel ----------
-class VIEW3D_PT_dpi_scaler(bpy.types.Panel):
-    bl_label = "Image Plane DPI Scaler"
-    bl_space_type = 'VIEW_3D'
-    bl_region_type = 'UI'
-    bl_category = "Carton Viz"
-    bl_options = {'DEFAULT_CLOSED'}
 
-    def draw(self, context):
-        layout = self.layout
-        scene = context.scene
-        props = scene.dpi_scaler_props
-        obj = context.active_object
-        unit_system = scene.unit_settings.system
-        scale_length = scene.unit_settings.scale_length
-
-        layout.prop(props, "dpi")
-
-        if obj and obj.type == 'MESH':
-            image = get_image_from_object(obj)
-            if image:
-                width_px, height_px = image.size
-                dpi = props.dpi
-
-                width_in = width_px / dpi
-                height_in = height_px / dpi
-
-                if unit_system == 'IMPERIAL':
-                    inches_per_BU = scale_length * 39.3701
-                    target_width_BU = width_in / inches_per_BU
-                    target_height_BU = height_in / inches_per_BU
-                    layout.label(text=f"Target Size: {width_in:.2f}\" x {height_in:.2f}\"")
-                elif unit_system == 'METRIC':
-                    mm_per_BU = scale_length * 1000
-                    target_width_BU = (width_in * 25.4) / mm_per_BU
-                    target_height_BU = (height_in * 25.4) / mm_per_BU
-                    layout.label(text=f"Target Size: {width_in*25.4:.2f}mm x {height_in*25.4:.2f}mm")
-                else:
-                    target_width_BU = (width_in * 0.0254) / scale_length
-                    target_height_BU = (height_in * 0.0254) / scale_length
-                    layout.label(text=f"Target Size: {width_in*25.4:.2f}mm x {height_in*25.4:.2f}mm")
-
-                layout.label(text=f"Blender Units: {target_width_BU:.3f} x {target_height_BU:.3f}")
-                layout.operator("object.scale_image_plane_dpi", text="Apply Scaling")
-            else:
-                layout.label(text="No image found on selected object.")
-        else:
-            layout.label(text="Select an image plane.")
 
 class VIEW3D_PT_knockout_panel(bpy.types.Panel):
     bl_label = "Knock-Out Cutter"
     bl_idname = "VIEW3D_PT_knockout_panel"
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'UI'
-    bl_category = "Carton Viz"
+    bl_category = "Carton CAD"
     bl_options = {'DEFAULT_CLOSED'}
 
     def draw(self, context):
@@ -2072,13 +2060,13 @@ class VIEW3D_PT_knockout_panel(bpy.types.Panel):
 
 
 
-class CARTONVIZ_PT_CartonFinishing(bpy.types.Panel):
+class CARTONCAD_PT_CartonFinishing(bpy.types.Panel):
     """Carton Finishing"""
     bl_label = "Carton Finishing"
-    bl_idname = "cartonviz_PT_CartonFinishing"
+    bl_idname = "cartoncad_PT_CartonFinishing"
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
-    bl_category = "Carton Viz"
+    bl_category = "Carton CAD"
     bl_options = {'DEFAULT_CLOSED'}
 
     def draw(self, context):
@@ -2121,7 +2109,7 @@ class CARTONVIZ_PT_CartonFinishing(bpy.types.Panel):
         row1.operator("object.add_bevel",
                       text="Bevel",
                       icon='MESH_ICOSPHERE')
-        row1.operator("cartonviz.addbasic_operator",
+        row1.operator("cartoncad.addbasic_operator",
                       text="Base Shader",
                       icon='CON_FOLLOWTRACK')
 
@@ -2131,22 +2119,22 @@ class CARTONVIZ_PT_CartonFinishing(bpy.types.Panel):
         row.scale_x = 0.50
         row.scale_y = 1.25
         row1 = row.split(align=True)
-        row1.operator("cartonviz.add_fiberboard",
+        row1.operator("cartoncad.add_fiberboard",
                       text="Fiberboard",
                       icon='MESH_GRID')
-        row1.operator("cartonviz.add_corrugate",
+        row1.operator("cartoncad.add_corrugate",
                       text="Corrugate",
                       icon='ALIGN_JUSTIFY')
 
         
 
-class CARTONVIZ_PT_SceneRendering(bpy.types.Panel):
+class CARTONCAD_PT_SceneRendering(bpy.types.Panel):
     """Carton Rendering"""
     bl_label = "Carton Rendering"
-    bl_idname = "cartonviz_PT_CartonRendering"
+    bl_idname = "CARTONCAD_PT_CartonRendering"
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
-    bl_category = "Carton Viz"
+    bl_category = "Carton CAD"
     bl_options = {'DEFAULT_CLOSED'}
 
     def draw(self, context):
@@ -2217,9 +2205,9 @@ classes = [
     OBJECT_OT_center_mirror,
     SCENE_OT_scene_pivot,
     OBJECT_OT_cardboard,
-    CARTONVIZ_OT_add_basic,
-    CARTONVIZ_OT_add_fiberboard,
-    CARTONVIZ_OT_add_corrugate,
+    CARTONCAD_OT_add_basic,
+    CARTONCAD_OT_add_fiberboard,
+    CARTONCAD_OT_add_corrugate,
     SCENE_OT_preview_render,
     SCENE_OT_full_render,
     SCENE_OT_pose_frames,
@@ -2243,12 +2231,11 @@ classes = [
     OBJECT_OT_tag_as_cutter,
     VIEW3D_PT_carton_creation,
     VIEW3D_PT_knockout_panel,
-    CARTON_PT_mirror_panel,
+    VIEW3D_PT_mirror_panel,
     DPIScalerProperties,
-    OBJECT_OT_scale_image_plane,
-    VIEW3D_PT_dpi_scaler,
-    CARTONVIZ_PT_CartonFinishing,
-    CARTONVIZ_PT_SceneRendering,
+    CARTON_OT_scale_image_plane,
+    CARTONCAD_PT_CartonFinishing,
+    CARTONCAD_PT_SceneRendering,
     CartonCADMirrorProperties,
     CARTON_OT_snap_cursor_set_pivot,
     CARTON_OT_mirror_to_cursor,
