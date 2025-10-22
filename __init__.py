@@ -1756,15 +1756,18 @@ class VIEW3D_PT_carton_creation(Panel):
                       text="Load Dieline",
                       icon='MESH_GRID')
 
-        #########import DPI here
-        layout = self.layout
+        ######### Import DPI here — inside the same panel box #########
         scene = context.scene
         dprops = scene.dpi_scaler_props
         obj = context.active_object
         unit_system = scene.unit_settings.system
         scale_length = scene.unit_settings.scale_length
 
-        layout.prop(dprops, "dpi")
+        # Create a sub-box within the current column
+        sub_box = col.box()
+        sub_box.label(text="DPI Scaling")
+
+        sub_box.prop(dprops, "dpi")
 
         if obj and obj.type == 'MESH':
             image = get_image_from_object(obj)
@@ -1779,25 +1782,23 @@ class VIEW3D_PT_carton_creation(Panel):
                     inches_per_BU = scale_length * 39.3701
                     target_width_BU = width_in / inches_per_BU
                     target_height_BU = height_in / inches_per_BU
-                    layout.label(text=f"Target Size: {width_in:.2f}\" x {height_in:.2f}\"")
+                    sub_box.label(text=f"Target Size: {width_in:.2f}\" x {height_in:.2f}\"")
                 elif unit_system == 'METRIC':
                     mm_per_BU = scale_length * 1000
                     target_width_BU = (width_in * 25.4) / mm_per_BU
                     target_height_BU = (height_in * 25.4) / mm_per_BU
-                    layout.label(text=f"Target Size: {width_in*25.4:.2f}mm x {height_in*25.4:.2f}mm")
+                    sub_box.label(text=f"Target Size: {width_in*25.4:.2f}mm x {height_in*25.4:.2f}mm")
                 else:
                     target_width_BU = (width_in * 0.0254) / scale_length
                     target_height_BU = (height_in * 0.0254) / scale_length
-                    layout.label(text=f"Target Size: {width_in*25.4:.2f}mm x {height_in*25.4:.2f}mm")
+                    sub_box.label(text=f"Target Size: {width_in*25.4:.2f}mm x {height_in*25.4:.2f}mm")
 
-                layout.label(text=f"Blender Units: {target_width_BU:.3f} x {target_height_BU:.3f}")
-                layout.operator("carton.scale_image_plane_dpi", text="Apply Scaling")
+                sub_box.label(text=f"Blender Units: {target_width_BU:.3f} x {target_height_BU:.3f}")
+                sub_box.operator("carton.scale_image_plane_dpi", text="Apply Scaling")
             else:
-                layout.label(text="No image found on selected object.")
+                sub_box.label(text="No image found on selected object.")
         else:
-            layout.label(text="Select an image plane.")
-
-
+            sub_box.label(text="Select an image plane.")
 
 
         row2 = row.split(align=True)
